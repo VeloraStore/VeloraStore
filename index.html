@@ -37,7 +37,7 @@ body{background:var(--bg);color:var(--fg);font-family:Inter,system-ui,sans-serif
  <nav class="md:hidden flex gap-5 px-4 pb-2 text-sm font-medium"><a href="#home" onclick="go('home')">Home</a><a href="#shop" onclick="go('shop')">Shop</a><a href="#orders" onclick="go('orders')">Orders</a></nav>
 </header>
 <main id="app" class="max-w-7xl mx-auto px-4 py-6 min-h-[70vh]"></main>
-<footer class="text-center text-sm mut py-8 border-t" style="border-color:var(--bd)">© 2026 Velora · Free delivery over Rs. 5,000 ·</footer>
+<footer class="text-center text-sm mut py-8 border-t" style="border-color:var(--bd)">© 2026 Velora · Free delivery over Rs. 5,000 · Demo store – no real payments</footer>
 
 <!-- CART DRAWER -->
 <div id="ov" onclick="drawer(false)" class="fixed inset-0 bg-black/40 z-40 hidden"></div>
@@ -49,58 +49,88 @@ body{background:var(--bg);color:var(--fg);font-family:Inter,system-ui,sans-serif
 <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-gray-900 text-white px-4 py-2 rounded-full text-sm hidden"></div>
 
 <script>
-/* ===== DATA ===== */
+/* ===== DATA & LOCALSTORAGE SYNC ===== */
 const CATS=['Electronics','Fashion','Home & Living','Beauty','Fitness','Accessories'];
 const GRAD={Electronics:['#6366f1','#22d3ee'],Fashion:['#f472b6','#fb923c'],'Home & Living':['#34d399','#a3e635'],Beauty:['#f9a8d4','#c084fc'],Fitness:['#f59e0b','#ef4444'],Accessories:['#64748b','#0ea5e9']};
-// name|cat|price|rating|emoji|tags|sold
-const RAW=`Wireless Earbuds Pro|Electronics|12900|4.6|🎧|audio,wireless,music|950
-Smart Watch S2|Electronics|18500|4.4|⌚|wearable,fitness,watch|720
-Portable Bluetooth Speaker|Electronics|7500|4.5|🔊|audio,wireless,party|610
-20K Power Bank|Electronics|4200|4.3|🔋|charging,travel,phone|880
-Linen Summer Shirt|Fashion|3800|4.2|👕|shirt,casual,summer|310
-Denim Jacket|Fashion|7900|4.5|🧥|jacket,denim,winter|420
-Classic Sneakers|Fashion|8900|4.7|👟|shoes,casual,sport|1020
-Merino Wool Scarf|Fashion|2200|4.1|🧣|winter,scarf,gift|240
-Ceramic Vase Set|Home & Living|3400|4.4|🏺|decor,gift,vase|190
-Aroma Diffuser|Home & Living|3900|4.6|🕯️|relax,scent,decor|530
-Cotton Throw Blanket|Home & Living|4600|4.5|🛋️|cozy,winter,decor|370
-LED Desk Lamp|Home & Living|3100|4.3|💡|office,light,study|450
-Vitamin C Serum|Beauty|2800|4.6|🧴|skincare,glow,serum|990
-Hydrating Moisturizer|Beauty|2400|4.4|🧼|skincare,daily,cream|760
-Matte Lip Kit|Beauty|1900|4.0|💄|makeup,lips,gift|330
-Argan Hair Oil|Beauty|2100|4.2|🌿|hair,care,natural|410
-Yoga Mat Pro|Fitness|3600|4.7|🧘|yoga,mat,home-workout|640
-Adjustable Dumbbells|Fitness|14500|4.5|🏋️|weights,strength,home-workout|280
-Resistance Bands Set|Fitness|1700|4.3|🎽|bands,stretch,home-workout|700
-Insulated Bottle 750ml|Fitness|1900|4.6|🧊|bottle,gym,travel|820
-Leather Wallet|Accessories|3300|4.5|👛|wallet,leather,gift|500
-Polarized Sunglasses|Accessories|4800|4.2|🕶️|sun,summer,style|360
-Canvas Backpack|Accessories|5600|4.6|🎒|bag,travel,study|580
-Phone Case Duo|Accessories|1500|3.9|📱|phone,case,protection|900`;
-const COLORS={Charcoal:'#2b2f33',Ivory:'#f1ead9',Emerald:'#059669'};
-const P=RAW.split('\n').map((l,i)=>{const [n,c,p,r,e,t,s]=l.split('|');return{id:i+1,n,c,p:+p,r:+r,e,t:t.split(','),sold:+s,rv:Math.round(+s/3),stock:[0,3,40,12,25,6,60,18][(i*5)%8]+(i%3?5:0),
- sizes:c==='Fashion'?['S','M','L','XL']:null,d:`${n} — crafted for everyday use with premium materials, thoughtful design and a one-year Velora warranty. Perfect for ${t.split(',')[0]} lovers.`}});
-const byId=id=>P.find(p=>p.id==id);
-const fmt=n=>'Rs. '+Math.round(n).toLocaleString('en-PK');
-const PROMOS={VELORA10:.10,WELCOME20:.20};
 
-/* ===== STATE & STORAGE ===== */
-const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-let cart=ls.get('velora_cart',[]),orders=ls.get('velora_orders',[]),promo=ls.get('velora_promo',null);
-let F={cat:'All',min:0,max:20000,rate:0,sort:'feat',q:''},view={n:'home',a:null},sel={};
+const INITIAL_RAW=`Wireless Earbuds Pro|Electronics|12900|4.6|🎧|audio,wireless,music|0
+Smart Watch S2|Electronics|18500|4.4|⌚|wearable,fitness,watch|0
+Portable Bluetooth Speaker|Electronics|7500|4.5|🔊|audio,wireless,party|0
+20K Power Bank|Electronics|4200|4.3|🔋|charging,travel,phone|0
+Linen Summer Shirt|Fashion|3800|4.2|👕|shirt,casual,summer|0
+Denim Jacket|Fashion|7900|4.5|🧥|jacket,denim,winter|0
+Classic Sneakers|Fashion|8900|4.7|👟|shoes,casual,sport|0
+Merino Wool Scarf|Fashion|2200|4.1|🧣|winter,scarf,gift|0
+Ceramic Vase Set|Home & Living|3400|4.4|🏺|decor,gift,vase|0
+Aroma Diffuser|Home & Living|3900|4.6|🕯️|relax,scent,decor|0
+Cotton Throw Blanket|Home & Living|4600|4.5|🛋️|cozy,winter,decor|0
+LED Desk Lamp|Home & Living|3100|4.3|💡|office,light,study|0
+Vitamin C Serum|Beauty|2800|4.6|🧴|skincare,glow,serum|0
+Hydrating Moisturizer|Beauty|2400|4.4|🧼|skincare,daily,cream|0
+Matte Lip Kit|Beauty|1900|4.0|💄|makeup,lips,gift|0
+Argan Hair Oil|Beauty|2100|4.2|🌿|hair,care,natural|0
+Yoga Mat Pro|Fitness|3600|4.7|🧘|yoga,mat,home-workout|0
+Adjustable Dumbbells|Fitness|14500|4.5|🏋️|weights,strength,home-workout|0
+Resistance Bands Set|Fitness|1700|4.3|🎽|bands,stretch,home-workout|0
+Insulated Bottle 750ml|Fitness|1900|4.6|🧊|bottle,gym,travel|0
+Leather Wallet|Accessories|3300|4.5|👛|wallet,leather,gift|0
+Polarized Sunglasses|Accessories|4800|4.2|🕶️|sun,summer,style|0
+Canvas Backpack|Accessories|5600|4.6|🎒|bag,travel,study|0
+Phone Case Duo|Accessories|1500|3.9|📱|phone,case,protection|0`;
+
+const ls={
+ get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},
+ set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+
+// Load products from localStorage if available, otherwise initialize real store products (0 fake sales)
+let P = ls.get('velora_products', INITIAL_RAW.split('\n').map((l,i)=>{
+ const [n,c,p,r,e,t,s]=l.split('|');
+ return {id:i+1, n, c, p:+p, r:+r, e, t:t.split(','), sold:0, rv:0, stock:15, sizes:c==='Fashion'?['S','M','L','XL']:null, d:`${n} — crafted for everyday use with premium materials.`};
+}));
+
+let cart=ls.get('velora_cart',[]), orders=ls.get('velora_orders',[]), promo=ls.get('velora_promo',null);
+let F={cat:'All',min:0,max:20000,rate:0,sort:'feat',q:''}, view={n:'home',a:null}, sel={};
+
+const saveProducts=()=>ls.set('velora_products',P);
 const saveCart=()=>{ls.set('velora_cart',cart);ls.set('velora_promo',promo);$('#cc').textContent=cart.reduce((s,i)=>s+i.q,0);renderDrawer()};
 const $=s=>document.querySelector(s);
 const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.remove('hidden');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.add('hidden'),1800)};
 const toggleTheme=()=>{const r=document.documentElement;const dark=getComputedStyle(r).getPropertyValue('--bg').trim()==='#111315';r.dataset.theme=dark?'light':'dark'};
+const byId=id=>P.find(p=>p.id==id);
+const fmt=n=>'Rs. '+Math.round(n).toLocaleString('en-PK');
+const PROMOS={VELORA10:.10,WELCOME20:.20};
 
-/* ===== ROUTER ===== */
-function go(n,a=null){view={n,a};try{location.hash=n==='pdp'?'p'+a:n}catch(e){}drawer(false);render();scrollTo(0,0)}
-function fromHash(){const h=(location.hash||'').slice(1);if(/^p\d+$/.test(h))view={n:'pdp',a:+h.slice(1)};else if(['home','shop','checkout','orders'].includes(h))view={n:h,a:null}}
-addEventListener('hashchange',()=>{fromHash();render()});
-function render(){({home:vHome,shop:vShop,pdp:vPdp,checkout:vCheckout,success:vSuccess,orders:vOrders})[view.n]()}
+/* ===== ROUTER & SECRET ADMIN GATE ===== */
+function go(n,a=null){
+ if(n==='admin'){renderAdmin();return;}
+ view={n,a};try{location.hash=n==='pdp'?'p'+a:n}catch(e){}drawer(false);render();scrollTo(0,0)
+}
+
+function fromHash(){
+ const h=(location.hash||'').slice(1);
+ if(h.startsWith('admin-velorasecure999')){
+  if(sessionStorage.getItem('velora_admin_auth')==='true'){
+   view={n:'admin',a:null}; renderAdmin();
+  } else {
+   view={n:'admin_login',a:null}; renderAdminLogin();
+  }
+ } else if(/^p\d+$/.test(h)){
+  view={n:'pdp',a:+h.slice(1)}; render();
+ } else if(['home','shop','checkout','orders'].includes(h)){
+  view={n:h,a:null}; render();
+ } else {
+  view={n:'home',a:null}; render();
+ }
+}
+addEventListener('hashchange',()=>{fromHash()});
+function render(){
+ if(view.n==='admin'||view.n==='admin_login')return;
+ ({home:vHome,shop:vShop,pdp:vPdp,checkout:vCheckout,success:vSuccess,orders:vOrders})[view.n]();
+}
 
 /* ===== COMPONENTS ===== */
-const tile=(p,cls='h-44',big=false,ang=135)=>{const[a,b]=GRAD[p.c];return`<div class="${cls} rounded-xl flex items-center justify-center ${big?'text-8xl':'text-6xl'}" style="background:linear-gradient(${ang}deg,${a},${b})">${p.e}</div>`};
+const tile=(p,cls='h-44',big=false,ang=135)=>{const[a,b]=GRAD[p.c]||['#6366f1','#22d3ee'];return`<div class="${cls} rounded-xl flex items-center justify-center ${big?'text-8xl':'text-6xl'}" style="background:linear-gradient(${ang}deg,${a},${b})">${p.e||'📦'}</div>`};
 const stars=r=>`<span class="text-amber-500">${'★'.repeat(Math.round(r))}${'☆'.repeat(5-Math.round(r))}</span> <span class="text-xs mut">${r.toFixed(1)}</span>`;
 const stockTag=p=>p.stock===0?'<span class="text-red-600 text-sm">Out of stock</span>':p.stock<=5?`<span class="text-amber-600 text-sm">Only ${p.stock} left</span>`:'<span class="text-sm" style="color:var(--ac)">In stock</span>';
 const cardHtml=p=>`<div class="card hv p-3 flex flex-col"><div class="cursor-pointer" onclick="go('pdp',${p.id})">${tile(p)}<div class="mt-3 text-xs mut">${p.c}</div><div class="font-semibold leading-tight">${p.n}</div><div class="mt-1">${stars(p.r)}</div></div>
@@ -108,15 +138,15 @@ const cardHtml=p=>`<div class="card hv p-3 flex flex-col"><div class="cursor-poi
 
 /* ===== VIEWS ===== */
 function vHome(){
- const feat=[...P].sort((a,b)=>b.sold-a.sold).slice(0,8);
+ const feat=[...P].slice(0,8);
  $('#app').innerHTML=`
  <section class="rounded-3xl p-8 md:p-14 text-white" style="background:linear-gradient(120deg,#065f46,#4f46e5)">
-  <p class="uppercase tracking-widest text-xs opacity-80">Winter Edit 2026</p>
-  <h1 class="text-4xl md:text-6xl font-extrabold mt-2 max-w-xl">Elevate every day, for less.</h1>
-  <p class="mt-3 max-w-md opacity-90">Up to 20% off seasonal picks. Use code <b>VELORA10</b> or <b>WELCOME20</b> at checkout.</p>
+  <p class="uppercase tracking-widest text-xs opacity-80">Store Collection</p>
+  <h1 class="text-4xl md:text-6xl font-extrabold mt-2 max-w-xl">Quality products for everyday life.</h1>
+  <p class="mt-3 max-w-md opacity-90">Use code <b>VELORA10</b> or <b>WELCOME20</b> at checkout.</p>
   <button class="mt-6 bg-white text-gray-900 font-semibold rounded-xl px-6 py-3" onclick="F.cat='All';go('shop')">Shop the collection</button>
  </section>
- <h2 class="text-xl font-bold mt-10 mb-4">Trending categories</h2>
+ <h2 class="text-xl font-bold mt-10 mb-4">Categories</h2>
  <div class="grid grid-cols-2 md:grid-cols-6 gap-3">${CATS.map(c=>`<button onclick="F.cat='${c}';go('shop')" class="card hv p-4 text-center"><div class="h-14 rounded-lg mb-2" style="background:linear-gradient(135deg,${GRAD[c][0]},${GRAD[c][1]})"></div><b class="text-sm">${c}</b></button>`).join('')}</div>
  <h2 class="text-xl font-bold mt-10 mb-4">Featured products</h2>
  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">${feat.map(cardHtml).join('')}</div>`;
@@ -147,35 +177,23 @@ const pl=()=>{$('#pl').textContent=fmt(F.min)+' – '+fmt(F.max);grid()};
 function grid(){const r=filtered();$('#rc').textContent=r.length+' products';$('#grid').innerHTML=r.length?r.map(cardHtml).join(''):'<p class="mut col-span-full py-12 text-center">No products match your filters.</p>'}
 function onSearch(v){F.q=v;if(view.n!=='shop')go('shop');else grid()}
 
-/* --- PDP --- */
 function vPdp(){
- const p=byId(view.a);sel={color:'Charcoal',size:p.sizes?'M':null,qty:1};
+ const p=byId(view.a); if(!p)return go('shop');
+ sel={color:'Charcoal',size:p.sizes?'M':null,qty:1};
  const rel=P.filter(x=>x.c===p.c&&x.id!==p.id).slice(0,4);
- const smart=P.filter(x=>x.id!==p.id&&x.c!==p.c&&x.t.some(t=>p.t.includes(t))).slice(0,2);
- const fbt=[...rel.slice(0,1),...(smart.length?smart:P.filter(x=>x.c!==p.c&&x.id!==p.id).slice(p.id%5,(p.id%5)+1))].slice(0,2);
- const tot=p.p+fbt.reduce((s,x)=>s+x.p,0);
- const dist=[5,4,3,2,1].map((s,i)=>Math.max(2,Math.round((p.r-1)*[22,15,6,3,1][i]+ (i<2?30:0))));const sum=dist.reduce((a,b)=>a+b,0);
  $('#app').innerHTML=`<a class="text-sm mut cursor-pointer" onclick="go('shop')">← Back to shop</a>
  <div class="grid md:grid-cols-2 gap-8 mt-3">
-  <div><div id="main">${tile(p,'h-96',true)}</div><div class="grid grid-cols-4 gap-2 mt-2">${[135,45,225,315].map(a=>`<div class="cursor-pointer" onclick="$('#main').innerHTML=tile(byId(${p.id}),'h-96',true,${a})">${tile(p,'h-20',false,a)}</div>`).join('')}</div></div>
-  <div><div class="text-xs mut">${p.c}</div><h1 class="text-3xl font-bold">${p.n}</h1><div class="mt-1">${stars(p.r)} <span class="text-xs mut">(${p.rv} reviews)</span></div>
+  <div><div id="main">${tile(p,'h-96',true)}</div></div>
+  <div><div class="text-xs mut">${p.c}</div><h1 class="text-3xl font-bold">${p.n}</h1><div class="mt-1">${stars(p.r)}</div>
    <div class="text-3xl font-extrabold mt-3">${fmt(p.p)}</div><div class="mt-1">${stockTag(p)}</div><p class="mut mt-3">${p.d}</p>
-   <div class="mt-4"><b class="text-sm">Color</b><div class="flex gap-2 mt-1" id="cols">${Object.keys(COLORS).map(c=>`<span class="chip ${c==='Charcoal'?'on':''}" onclick="pick('color','${c}',this)">${c}</span>`).join('')}</div></div>
    ${p.sizes?`<div class="mt-3"><b class="text-sm">Size</b><div class="flex gap-2 mt-1" id="sz">${p.sizes.map(s=>`<span class="chip ${s==='M'?'on':''}" onclick="pick('size','${s}',this)">${s}</span>`).join('')}</div></div>`:''}
    <div class="flex gap-3 mt-5 items-center"><div class="flex items-center card px-2"><button class="px-2 text-xl" onclick="sel.qty=Math.max(1,sel.qty-1);$('#qv').textContent=sel.qty">−</button><span id="qv" class="w-6 text-center">1</span><button class="px-2 text-xl" onclick="sel.qty=Math.min(10,sel.qty+1);$('#qv').textContent=sel.qty">+</button></div>
    <button class="btn flex-1 py-3" ${p.stock?'':'disabled style="opacity:.4"'} onclick="addCart(${p.id},sel.color,sel.size,sel.qty,true)">Add to cart</button></div>
-   <div class="mt-6 space-y-2">${[['Details','Premium materials, tested for durability. Free returns within 14 days.'],['Shipping','Delivered in 2–5 business days. Free over Rs. 5,000, otherwise Rs. 250.'],['Warranty','Covered by a one-year Velora warranty.']].map(([t,b])=>`<details class="card px-4 py-3"><summary class="font-semibold cursor-pointer">${t}</summary><p class="mut text-sm mt-2">${b}</p></details>`).join('')}</div></div></div>
- ${fbt.length?`<section class="card p-5 mt-10"><h2 class="font-bold text-lg mb-3">Frequently bought together</h2><div class="flex flex-wrap items-center gap-3">${[p,...fbt].map((x,i)=>`${i?'<span class="text-2xl">+</span>':''}<div class="w-28 text-center cursor-pointer" onclick="go('pdp',${x.id})">${tile(x,'h-20')}<div class="text-xs mt-1">${x.n}</div></div>`).join('')}
-  <div class="ml-auto text-right"><div class="mut text-sm">Bundle total</div><b class="text-xl">${fmt(tot)}</b><br><button class="btn btn2 mt-2" onclick="[${[p,...fbt].map(x=>x.id)}].forEach(i=>addCart(i,'Charcoal',byId(i).sizes?'M':null,1,false));drawer(true)">Add all 3 to cart</button></div></div></section>`:''}
- <section class="mt-10"><h2 class="font-bold text-lg mb-3">Customer reviews</h2><div class="grid md:grid-cols-[220px_1fr] gap-6">
-  <div class="card p-4 text-center"><div class="text-5xl font-extrabold">${p.r.toFixed(1)}</div>${stars(p.r)}<div class="text-xs mut mt-1">${p.rv} ratings</div></div>
-  <div class="card p-4 space-y-1">${dist.map((d,i)=>`<div class="flex items-center gap-2 text-sm"><span class="w-6">${5-i}★</span><div class="flex-1 h-2 rounded bg-gray-200/70"><div class="h-2 rounded bg-amber-500" style="width:${d/sum*100}%"></div></div><span class="w-8 mut text-right">${Math.round(d/sum*100)}%</span></div>`).join('')}</div></div>
-  <div class="grid md:grid-cols-3 gap-3 mt-4">${[['Ayesha K.','Exactly as described, arrived fast!'],['Hamza R.','Great quality for the price.'],['Sana M.','Would buy again. Packaging was lovely.']].map(([n,t])=>`<div class="card p-4"><div class="text-amber-500">★★★★★</div><p class="text-sm mt-1">${t}</p><div class="text-xs mut mt-2">${n} · Verified buyer</div></div>`).join('')}</div></section>
- <section class="mt-10"><h2 class="font-bold text-lg mb-3">You may also like</h2><div class="grid grid-cols-2 md:grid-cols-4 gap-4">${rel.map(cardHtml).join('')}</div></section>`;
+  </div></div>`;
 }
 function pick(k,v,el){sel[k]=v;[...el.parentNode.children].forEach(c=>c.classList.remove('on'));el.classList.add('on')}
 
-/* ===== CART LOGIC ===== */
+/* ===== CART & CHECKOUT ===== */
 const quickAdd=id=>addCart(id,'Charcoal',byId(id).sizes?'M':null,1,true);
 function addCart(id,color,size,q,open){
  const k=[id,color,size].join('|'),ex=cart.find(i=>i.k===k);
@@ -189,16 +207,14 @@ function totals(){
 }
 function applyPromo(){const c=$('#pc').value.trim().toUpperCase();if(PROMOS[c]){promo=c;toast(c+' applied');}else{promo=null;toast('Invalid promo code')}saveCart();if(view.n==='checkout')vCheckout()}
 function drawer(open){$('#drawer').classList.toggle('translate-x-full',!open);$('#ov').classList.toggle('hidden',!open)}
-const lineHtml=i=>{const p=byId(i.id);return`<div class="flex gap-3 items-center"><div class="w-16">${tile(p,'h-16')}</div><div class="flex-1 text-sm"><b>${p.n}</b><div class="mut text-xs">${i.color}${i.size?' · '+i.size:''}</div><div>${fmt(p.p*i.q)}</div></div><div class="flex items-center gap-1"><button class="chip" onclick="qty('${i.k}',-1)">−</button><span class="w-5 text-center">${i.q}</span><button class="chip" onclick="qty('${i.k}',1)">+</button></div></div>`};
+const lineHtml=i=>{const p=byId(i.id);return p?`<div class="flex gap-3 items-center"><div class="w-16">${tile(p,'h-16')}</div><div class="flex-1 text-sm"><b>${p.n}</b><div class="mut text-xs">${i.color}${i.size?' · '+i.size:''}</div><div>${fmt(p.p*i.q)}</div></div><div class="flex items-center gap-1"><button class="chip" onclick="qty('${i.k}',-1)">−</button><span class="w-5 text-center">${i.q}</span><button class="chip" onclick="qty('${i.k}',1)">+</button></div></div>`:''};
 const sumHtml=t=>`<div class="text-sm space-y-1"><div class="flex justify-between"><span class="mut">Subtotal</span>${fmt(t.sub)}</div>${t.disc?`<div class="flex justify-between" style="color:var(--ac)"><span>Promo ${promo}</span>−${fmt(t.disc)}</div>`:''}<div class="flex justify-between"><span class="mut">Shipping</span>${t.ship?fmt(t.ship):'Free'}</div><div class="flex justify-between text-lg font-bold pt-1"><span>Total</span>${fmt(t.total)}</div></div>`;
 function renderDrawer(){
  const t=totals();
- const sug=cart.length?P.filter(p=>p.c===byId(cart[0].id).c&&!cart.some(i=>i.id===p.id))[0]:null;
- $('#dbody').innerHTML=cart.length?cart.map(lineHtml).join('')+(sug?`<div class="card p-3 mt-4 flex items-center gap-3"><div class="w-12">${tile(sug,'h-12')}</div><div class="flex-1 text-xs"><div class="mut">Suggested for you</div><b>${sug.n}</b> · ${fmt(sug.p)}</div><button class="btn text-xs" onclick="quickAdd(${sug.id})">Add</button></div>`:''):'<p class="mut text-center mt-10">Your cart is empty.</p>';
+ $('#dbody').innerHTML=cart.length?cart.map(lineHtml).join(''):'<p class="mut text-center mt-10">Your cart is empty.</p>';
  $('#dfoot').innerHTML=cart.length?`<div class="flex gap-2 mb-3"><input id="pc" class="inp" placeholder="Promo code" value="${promo||''}"><button class="ghost btn" onclick="applyPromo()">Apply</button></div>${sumHtml(t)}<button class="btn w-full mt-3 py-3" onclick="go('checkout')">Checkout</button>`:'';
 }
 
-/* ===== CHECKOUT ===== */
 let pay='card';
 function vCheckout(){
  if(!cart.length){$('#app').innerHTML='<div class="text-center py-20"><p class="mut">Your cart is empty.</p><button class="btn mt-4" onclick="go(\'shop\')">Go shopping</button></div>';return}
@@ -209,42 +225,160 @@ function vCheckout(){
   <section class="card p-5"><h2 class="font-bold mb-3">2. Payment method</h2>
    <div class="flex flex-wrap gap-2 mb-4">${[['card','Credit / Debit Card'],['ep','Easypaisa'],['cod','Cash on Delivery']].map(([v,l])=>`<span class="chip ${pay===v?'on':''}" onclick="pay='${v}';payUI()">${l}</span>`).join('')}</div><div id="payui"></div></section>
   <button class="btn w-full py-3 text-lg" onclick="placeOrder()">Place order · ${fmt(t.total)}</button></div>
- <aside class="card p-5 h-fit space-y-3"><h2 class="font-bold">Order summary</h2>${cart.map(lineHtml).join('')}<hr style="border-color:var(--bd)">${sumHtml(t)}<div class="flex gap-2"><input id="pc" class="inp" placeholder="Promo code" value="${promo||''}"><button class="ghost btn" onclick="applyPromo()">Apply</button></div></aside></div>`;
+ <aside class="card p-5 h-fit space-y-3"><h2 class="font-bold">Order summary</h2>${cart.map(lineHtml).join('')}<hr style="border-color:var(--bd)">${sumHtml(t)}</aside></div>`;
  payUI();
 }
 function payUI(){
  const t=totals();
- document.querySelectorAll('#app .chip').forEach(c=>{if(/Card|Easypaisa|Cash/.test(c.textContent))c.classList.toggle('on',({card:'Credit',ep:'Easypaisa',cod:'Cash'})[pay]&&c.textContent.startsWith(({card:'Credit',ep:'Easypaisa',cod:'Cash'})[pay]))});
  $('#payui').innerHTML={
-  card:`<div class="grid sm:grid-cols-2 gap-3"><div class="sm:col-span-2"><input id="cn" class="inp" placeholder="Cardholder name"></div><div class="sm:col-span-2"><input id="cu" class="inp" inputmode="numeric" maxlength="19" placeholder="Card number" oninput="this.value=this.value.replace(/\\D/g,'').replace(/(.{4})/g,'$1 ').trim()"></div><input id="ce" class="inp" maxlength="5" placeholder="MM/YY" oninput="this.value=this.value.replace(/\\D/g,'').replace(/^(\\d\\d)(\\d)/,'$1/$2')"><input id="cv" class="inp" maxlength="4" inputmode="numeric" placeholder="CVV"></div>`,
-  ep:`<div class="rounded-xl p-4 text-sm" style="background:#05966914"><p>Transfer <b>${fmt(t.total)}</b> to the official merchant Easypaisa account below, then enter your Transaction ID to complete the order.</p><div class="mt-2"><span class="mut">Account Number:</span> <b>0321800213</b></div><div><span class="mut">Account Title:</span> <b>Muhammad Ali Ashfaq</b></div></div><input id="tx" class="inp mt-3" placeholder="Transaction ID / Tavid / Reference number">`,
-  cod:`<p class="text-sm mut">Pay in cash when your order arrives. Please keep <b>${fmt(t.total)}</b> ready for the rider.</p>`}[pay];
+  card:`<div class="grid sm:grid-cols-2 gap-3"><div class="sm:col-span-2"><input id="cn" class="inp" placeholder="Cardholder name"></div><div class="sm:col-span-2"><input id="cu" class="inp" placeholder="Card number"></div><input id="ce" class="inp" placeholder="MM/YY"><input id="cv" class="inp" placeholder="CVV"></div>`,
+  ep:`<div class="rounded-xl p-4 text-sm" style="background:#05966914"><p>Transfer <b>${fmt(t.total)}</b> to account <b>0321800213</b> (Muhammad Ali Ashfaq), then enter your Txn ID.</p></div><input id="tx" class="inp mt-3" placeholder="Transaction ID">`,
+  cod:`<p class="text-sm mut">Pay in cash upon delivery.</p>`}[pay];
 }
 function placeOrder(){
  let ok=true;const chk=(id,fn)=>{const e=$('#'+id);if(!e)return;const v=e.value.trim(),g=fn(v);e.classList.toggle('bad',!g);if(!g)ok=false};
  chk('fn',v=>v.length>2);chk('ph',v=>/^[0-9+\s-]{10,14}$/.test(v));chk('em',v=>/^\S+@\S+\.\S+$/.test(v));chk('ct',v=>v.length>1);chk('ad',v=>v.length>5);
- if(pay==='card'){chk('cn',v=>v.length>2);chk('cu',v=>v.replace(/\s/g,'').length>=15);chk('ce',v=>/^(0[1-9]|1[0-2])\/\d\d$/.test(v));chk('cv',v=>/^\d{3,4}$/.test(v))}
- if(pay==='ep')chk('tx',v=>v.length>=6);
- if(!ok){toast('Please fix the highlighted fields');return}
+ if(!ok){toast('Please check required fields');return}
  const t=totals(),id='VLR-'+Math.random().toString(36).slice(2,8).toUpperCase();
- const o={id,track:'TRK'+Date.now().toString().slice(-9),date:new Date().toLocaleString(),pay:{card:'Card',ep:'Easypaisa (Txn '+$('#tx')?.value+')',cod:'Cash on Delivery'}[pay],name:$('#fn').value,addr:$('#ad').value+', '+$('#ct').value,items:cart.map(i=>({n:byId(i.id).n,v:i.color+(i.size?' / '+i.size:''),q:i.q,p:byId(i.id).p})),t};
+ const o={id,date:new Date().toLocaleString(),pay:{card:'Card',ep:'Easypaisa',cod:'Cash'}[pay],name:$('#fn').value,addr:$('#ad').value+', '+$('#ct').value,items:cart.map(i=>({n:byId(i.id).n,v:i.color,q:i.q,p:byId(i.id).p})),t,status:'Pending'};
  orders.unshift(o);ls.set('velora_orders',orders);cart=[];promo=null;saveCart();go('success',o.id);
 }
-
-/* ===== SUCCESS & ORDERS ===== */
-const receipt=o=>`<div class="text-sm space-y-1">${o.items.map(i=>`<div class="flex justify-between"><span>${i.q}× ${i.n} <span class="mut">(${i.v})</span></span>${fmt(i.p*i.q)}</div>`).join('')}</div><hr class="my-2" style="border-color:var(--bd)">${sumHtml(o.t)}<div class="text-xs mut mt-2">Payment: ${o.pay}<br>Ship to: ${o.name}, ${o.addr}</div>`;
+const receipt=o=>`<div class="text-sm space-y-1">${o.items.map(i=>`<div class="flex justify-between"><span>${i.q}× ${i.n}</span>${fmt(i.p*i.q)}</div>`).join('')}</div><hr class="my-2" style="border-color:var(--bd)">${sumHtml(o.t)}<div class="text-xs mut mt-2">Payment: ${o.pay}<br>Ship to: ${o.name}, ${o.addr}</div>`;
 function vSuccess(){
  const o=orders.find(x=>x.id===view.a)||orders[0];if(!o)return go('home');
- $('#app').innerHTML=`<div class="max-w-xl mx-auto text-center"><div class="text-6xl">✅</div><h1 class="text-3xl font-extrabold mt-2">Thank you, ${o.name.split(' ')[0]}!</h1><p class="mut">Your order has been placed.${o.pay.startsWith('Easy')?' We’ll verify your transfer shortly.':''}</p>
- <div class="card p-5 mt-5 text-left"><div class="flex justify-between flex-wrap gap-2 mb-3"><div><div class="text-xs mut">Order ID</div><b>${o.id}</b></div><div><div class="text-xs mut">Tracking ID</div><b>${o.track}</b></div><div><div class="text-xs mut">Date</div><b class="text-sm">${o.date}</b></div></div>${receipt(o)}</div>
- <button class="btn mt-5" onclick="go('shop')">Continue shopping</button></div>`;
+ $('#app').innerHTML=`<div class="max-w-xl mx-auto text-center"><div class="text-6xl">✅</div><h1 class="text-3xl font-extrabold mt-2">Thank you, ${o.name.split(' ')[0]}!</h1><p class="mut">Your order has been placed.</p><div class="card p-5 mt-5 text-left"><div class="flex justify-between mb-3"><b>${o.id}</b><span class="text-xs mut">${o.date}</span></div>${receipt(o)}</div><button class="btn mt-5" onclick="go('shop')">Continue shopping</button></div>`;
 }
 function vOrders(){
- $('#app').innerHTML=`<h1 class="text-2xl font-bold mb-4">Order history</h1>`+(orders.length?`<div class="space-y-4">${orders.map(o=>`<div class="card p-5"><div class="flex justify-between mb-2"><b>${o.id}</b><span class="text-xs mut">${o.date} · ${o.track}</span></div>${receipt(o)}</div>`).join('')}</div>`:'<p class="mut">No orders yet.</p>');
+ $('#app').innerHTML=`<h1 class="text-2xl font-bold mb-4">Order history</h1>`+(orders.length?`<div class="space-y-4">${orders.map(o=>`<div class="card p-5"><div class="flex justify-between mb-2"><b>${o.id}</b><span class="text-xs mut">${o.date}</span></div>${receipt(o)}</div>`).join('')}</div>`:'<p class="mut">No orders yet.</p>');
+}
+
+/* ===== SECURE ADMIN PANEL ===== */
+function renderAdminLogin(){
+ $('#app').innerHTML=`<div class="max-w-md mx-auto card p-8 mt-12 text-center">
+  <h1 class="text-2xl font-bold mb-2">Admin Portal</h1>
+  <p class="mut text-sm mb-6">Enter your master password to access store management.</p>
+  <input type="password" id="apass" class="inp mb-4" placeholder="Master Password">
+  <button class="btn w-full py-3" onclick="verifyAdmin()">Login to Admin</button>
+  <button class="ghost btn w-full mt-2" onclick="go('home')">Return to Store</button>
+ </div>`;
+}
+function verifyAdmin(){
+ const val=$('#apass').value;
+ if(val==='VeloraAdmin2026!'){
+  sessionStorage.setItem('velora_admin_auth','true');
+  go('admin');
+ } else {
+  toast('Incorrect password');
+ }
+}
+
+function renderAdmin(){
+ const totalRev=orders.reduce((sum,o)=>sum+o.t.total,0);
+ const lowStock=P.filter(p=>p.stock<=5).length;
+ 
+ $('#app').innerHTML=`<div class="space-y-6">
+  <div class="flex justify-between items-center flex-wrap gap-3">
+   <div><h1 class="text-3xl font-extrabold">Store Admin Panel</h1><p class="mut text-sm">Manage products, inventory, and orders.</p></div>
+   <div class="flex gap-2">
+    <button class="btn btn2" onclick="openProductModal()">+ Add New Product</button>
+    <button class="ghost btn" onclick="sessionStorage.removeItem('velora_admin_auth');go('home')">Logout</button>
+   </div>
+  </div>
+
+  <!-- METRICS -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+   <div class="card p-4"><div class="mut text-xs">Total Revenue</div><div class="text-2xl font-bold mt-1">${fmt(totalRev)}</div></div>
+   <div class="card p-4"><div class="mut text-xs">Total Orders</div><div class="text-2xl font-bold mt-1">${orders.length}</div></div>
+   <div class="card p-4"><div class="mut text-xs">Active Products</div><div class="text-2xl font-bold mt-1">${P.length}</div></div>
+   <div class="card p-4"><div class="mut text-xs">Low Stock Items</div><div class="text-2xl font-bold mt-1 text-amber-600">${lowStock}</div></div>
+  </div>
+
+  <!-- TABS CONTENT -->
+  <div class="grid md:grid-cols-2 gap-6">
+   <section class="card p-5">
+    <h2 class="font-bold text-lg mb-4">Customer Orders (${orders.length})</h2>
+    <div class="space-y-3 max-h-[500px] overflow-y-auto">
+     ${orders.length?orders.map(o=>`<div class="card p-3 text-sm">
+      <div class="flex justify-between font-semibold"><span>${o.id} - ${o.name}</span><span>${fmt(o.t.total)}</span></div>
+      <div class="mut text-xs">${o.date} · Payment: ${o.pay}</div>
+      <div class="text-xs mt-1">Items: ${o.items.map(i=>i.q+'x '+i.n).join(', ')}</div>
+     </div>`).join(''):'<p class="mut text-sm">No orders received yet.</p>'}
+    </div>
+   </section>
+
+   <section class="card p-5">
+    <h2 class="font-bold text-lg mb-4">Product Catalog (${P.length})</h2>
+    <div class="space-y-2 max-h-[500px] overflow-y-auto">
+     ${P.map(p=>`<div class="card p-3 flex items-center justify-between text-sm">
+      <div class="flex items-center gap-3">
+       <div class="w-10 h-10 rounded flex items-center justify-center text-xl bg-gray-100">${p.e}</div>
+       <div><b>${p.n}</b><div class="mut text-xs">${p.c} · Stock: ${p.stock} · ${fmt(p.p)}</div></div>
+      </div>
+      <div class="flex gap-2">
+       <button class="ghost btn text-xs py-1 px-2" onclick="editProduct(${p.id})">Edit</button>
+       <button class="btn bg-red-600 text-xs py-1 px-2" onclick="deleteProduct(${p.id})">Delete</button>
+      </div>
+     </div>`).join('')}
+    </div>
+   </section>
+  </div>
+ </div>`;
+}
+
+function openProductModal(editId=null){
+ const p=editId?byId(editId):{n:'',c:CATS[0],p:1000,e:'📦',stock:10,d:''};
+ const modalHtml=`<div id="pmodal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+  <div class="card p-6 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto">
+   <h2 class="text-xl font-bold">${editId?'Edit Product':'Add New Product'}</h2>
+   <label class="block text-sm">Product Name<input id="pn" class="inp mt-1" value="${p.n}"></label>
+   <label class="block text-sm">Category<select id="pc" class="inp mt-1">${CATS.map(c=>`<option ${p.c===c?'selected':''}>${c}</option>`).join('')}</select></label>
+   <div class="grid grid-cols-2 gap-3">
+    <label class="block text-sm">Price (PKR)<input type="number" id="pp" class="inp mt-1" value="${p.p}"></label>
+    <label class="block text-sm">Stock Quantity<input type="number" id="ps" class="inp mt-1" value="${p.stock}"></label>
+   </div>
+   <div class="grid grid-cols-2 gap-3">
+    <label class="block text-sm">Emoji Icon<input id="pe" class="inp mt-1" value="${p.e}"></label>
+    <label class="block text-sm">Rating<input type="number" step="0.1" max="5" id="pr" class="inp mt-1" value="${p.r||4.5}"></label>
+   </div>
+   <label class="block text-sm">Description<textarea id="pd" class="inp mt-1">${p.d}</textarea></label>
+   <div class="flex justify-end gap-2 pt-2">
+    <button class="ghost btn" onclick="$('#pmodal').remove()">Cancel</button>
+    <button class="btn" onclick="saveProduct(${editId||''})">Save Product</button>
+   </div>
+  </div>
+ </div>`;
+ document.body.insertAdjacentHTML('beforeend',modalHtml);
+}
+
+function saveProduct(id){
+ const name=$('#pn').value.trim();
+ if(!name){toast('Product name required');return;}
+ const prod={
+  id:id?id:Date.now(),
+  n:name,
+  c:$('#pc').value,
+  p:parseFloat($('#pp').value)||0,
+  stock:parseInt($('#ps').value)||0,
+  e:$('#pe').value||'📦',
+  r:parseFloat($('#pr').value)||4.5,
+  t:['new'],
+  d:$('#pd').value||'',
+  sold:id?byId(id).sold:0,
+  rv:id?byId(id).rv:10
+ };
+ if(id){const idx=P.findIndex(x=>x.id==id);P[idx]=prod;}else{P.unshift(prod);}
+ saveProducts();$('#pmodal').remove();toast('Product saved successfully');renderAdmin();
+}
+
+function deleteProduct(id){
+ if(confirm('Are you sure you want to delete this product?')){
+  P=P.filter(x=>x.id!==id);
+  saveProducts();toast('Product deleted');renderAdmin();
+ }
 }
 
 /* ===== INIT ===== */
-fromHash();saveCart();render();
+fromHash();saveCart();
 </script>
 </body>
 </html>
