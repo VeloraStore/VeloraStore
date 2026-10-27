@@ -1,6 +1,3 @@
-Here is your updated Velora Store code with your WhatsApp business number (03102179996) fully integrated.
-When your customers place an order and reach the confirmation page, clicking "💬 Confirm Order via WhatsApp" will instantly pre-fill all order details, item lists, customer shipping information, and totals, sending it straight to your WhatsApp!
-Updated Code (index.html):
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,8 +53,9 @@ body{background:var(--bg);color:var(--fg);font-family:Inter,system-ui,sans-serif
 const CATS=['Electronics','Fashion','Home & Living','Beauty','Fitness','Accessories'];
 const GRAD={Electronics:['#6366f1','#22d3ee'],Fashion:['#f472b6','#fb923c'],'Home & Living':['#34d399','#a3e635'],Beauty:['#f9a8d4','#c084fc'],Fitness:['#f59e0b','#ef4444'],Accessories:['#64748b','#0ea5e9']};
 
-// Your Business WhatsApp Number (Formatted with country code 92 for Pakistan)
+// Your Business WhatsApp Number & Admin Password
 const BUSINESS_WHATSAPP = '923102179996';
+const ADMIN_PASSWORD = 'abc123abc';
 
 const INITIAL_RAW=`Wireless Earbuds Pro|Electronics|12900|4.6|🎧|audio,wireless,music|0|https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500&auto=format&fit=crop&q=60
 Smart Watch S2|Electronics|18500|4.4|⌚|wearable,fitness,watch|0|https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60
@@ -197,7 +195,7 @@ function vPdp(){
  <div class="grid md:grid-cols-2 gap-8 mt-3">
   <div><div id="main">${tile(p,'h-96',true)}</div></div>
   <div><div class="text-xs mut">${p.c}</div><h1 class="text-3xl font-bold">${p.n}</h1><div class="mt-1">${stars(p.r)}</div>
-   <div class="text-3xl font-extrabold mt-3">${fmt(p.p)}</div><div class="mt-1">${stockTag(p)}</div><p class="mut mt-3">${p.d}</p>
+   <div class="text-3xl font-extrabold mt-3">${fmt(p.p)}</div><div class="mt-1">${stockTag(p)}</div><p class="mut mut-3">${p.d}</p>
    ${p.sizes?`<div class="mt-3"><b class="text-sm">Size</b><div class="flex gap-2 mt-1" id="sz">${p.sizes.map(s=>`<span class="chip ${s==='M'?'on':''}" onclick="pick('size','${s}',this)">${s}</span>`).join('')}</div></div>`:''}
    <div class="flex gap-3 mt-5 items-center"><div class="flex items-center card px-2"><button class="px-2 text-xl" onclick="sel.qty=Math.max(1,sel.qty-1);$('#qv').textContent=sel.qty">−</button><span id="qv" class="w-6 text-center">1</span><button class="px-2 text-xl" onclick="sel.qty=Math.min(10,sel.qty+1);$('#qv').textContent=sel.qty">+</button></div>
    <button class="btn flex-1 py-3" ${p.stock?'':'disabled style="opacity:.4"'} onclick="addCart(${p.id},sel.color,sel.size,sel.qty,true)">Add to cart</button></div>
@@ -406,7 +404,7 @@ function renderAdminLogin(){
 }
 function checkAdminPw(){
  const inputPw = document.getElementById('apw').value.trim();
- if(inputPw==='velorasecure999'){
+ if(inputPw === ADMIN_PASSWORD){
   sessionStorage.setItem('velora_admin_auth','true');
   go('admin');
  }else{
@@ -454,4 +452,3 @@ saveCart();
 </script>
 </body>
 </html>
-
