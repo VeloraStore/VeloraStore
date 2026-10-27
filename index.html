@@ -53,7 +53,7 @@ body{background:var(--bg);color:var(--fg);font-family:Inter,system-ui,sans-serif
 const CATS=['Electronics','Fashion','Home & Living','Beauty','Fitness','Accessories'];
 const GRAD={Electronics:['#6366f1','#22d3ee'],Fashion:['#f472b6','#fb923c'],'Home & Living':['#34d399','#a3e635'],Beauty:['#f9a8d4','#c084fc'],Fitness:['#f59e0b','#ef4444'],Accessories:['#64748b','#0ea5e9']};
 
-// Your Business WhatsApp Number & Admin Password
+// Configuration
 const BUSINESS_WHATSAPP = '923102179996';
 const ADMIN_PASSWORD = 'abc123abc';
 
@@ -195,7 +195,7 @@ function vPdp(){
  <div class="grid md:grid-cols-2 gap-8 mt-3">
   <div><div id="main">${tile(p,'h-96',true)}</div></div>
   <div><div class="text-xs mut">${p.c}</div><h1 class="text-3xl font-bold">${p.n}</h1><div class="mt-1">${stars(p.r)}</div>
-   <div class="text-3xl font-extrabold mt-3">${fmt(p.p)}</div><div class="mt-1">${stockTag(p)}</div><p class="mut mut-3">${p.d}</p>
+   <div class="text-3xl font-extrabold mt-3">${fmt(p.p)}</div><div class="mt-1">${stockTag(p)}</div><p class="mut mt-3">${p.d}</p>
    ${p.sizes?`<div class="mt-3"><b class="text-sm">Size</b><div class="flex gap-2 mt-1" id="sz">${p.sizes.map(s=>`<span class="chip ${s==='M'?'on':''}" onclick="pick('size','${s}',this)">${s}</span>`).join('')}</div></div>`:''}
    <div class="flex gap-3 mt-5 items-center"><div class="flex items-center card px-2"><button class="px-2 text-xl" onclick="sel.qty=Math.max(1,sel.qty-1);$('#qv').textContent=sel.qty">−</button><span id="qv" class="w-6 text-center">1</span><button class="px-2 text-xl" onclick="sel.qty=Math.min(10,sel.qty+1);$('#qv').textContent=sel.qty">+</button></div>
    <button class="btn flex-1 py-3" ${p.stock?'':'disabled style="opacity:.4"'} onclick="addCart(${p.id},sel.color,sel.size,sel.qty,true)">Add to cart</button></div>
@@ -281,7 +281,6 @@ function vSuccess(orderId){
  const order=orders.find(o=>o.orderId===orderId)||orders[0];
  if(!order){go('home');return;}
  
- // Format WhatsApp message
  const itemsList = order.items.map(i => {
   const p = byId(i.id);
   return `• ${p ? p.n : 'Item'} x${i.q} (${fmt(p ? p.p * i.q : 0)})`;
@@ -402,17 +401,24 @@ function renderAdminLogin(){
  <button class="btn w-full" onclick="checkAdminPw()">Login</button>
 </div>`;
 }
+
 function checkAdminPw(){
  const inputPw = document.getElementById('apw').value.trim();
  if(inputPw === ADMIN_PASSWORD){
-  sessionStorage.setItem('velora_admin_auth','true');
-  go('admin');
- }else{
+  sessionStorage.setItem('velora_admin_auth', 'true');
+  view = {n: 'admin', a: null};
+  renderAdmin();
+  toast('Login successful!');
+ } else {
   toast('Incorrect password');
   const pwInput = document.getElementById('apw');
-  if(pwInput){ pwInput.classList.add('bad'); setTimeout(()=>pwInput.classList.remove('bad'), 1000); }
+  if(pwInput){ 
+      pwInput.classList.add('bad'); 
+      setTimeout(()=>pwInput.classList.remove('bad'), 1000); 
+  }
  }
 }
+
 function renderAdmin(){
  if(sessionStorage.getItem('velora_admin_auth')!=='true'){go('admin_login');return;}
  $('#app').innerHTML=`
@@ -441,6 +447,7 @@ function renderAdmin(){
   </div>
  </div>`).join(''):'<p class="mut">No orders placed yet.</p>'}</div>`;
 }
+
 function updateStatus(orderId, st){
  const o=orders.find(x=>x.orderId===orderId);
  if(o){o.status=st;ls.set('velora_orders',orders);toast('Status updated to '+st);}
