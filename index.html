@@ -9,7 +9,7 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <script type="text/javascript">
    (function(){
-      emailjs.init("YOUR_PUBLIC_KEY"); // <-- Your EmailJS Public Key is initialized here
+      emailjs.init("NJ4kYNe8aLsepH952"); // <-- Your EmailJS Public Key is initialized here
    })();
 </script>
 <style>
@@ -303,7 +303,7 @@ function renderAdminLogin(){
  </div>`;
 }
 function verifyAdmin(){
- const val=$('#apass').value;
+ const val=$('#apass'].value;
  if(val==='VeloraAdmin2026!'){
   sessionStorage.setItem('velora_admin_auth','true');
   go('admin');
