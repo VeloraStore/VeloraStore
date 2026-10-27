@@ -1,3 +1,6 @@
+Here is your updated Velora Store code with your WhatsApp business number (03102179996) fully integrated.
+When your customers place an order and reach the confirmation page, clicking "💬 Confirm Order via WhatsApp" will instantly pre-fill all order details, item lists, customer shipping information, and totals, sending it straight to your WhatsApp!
+Updated Code (index.html):
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -52,6 +55,9 @@ body{background:var(--bg);color:var(--fg);font-family:Inter,system-ui,sans-serif
 /* ===== DATA & LOCALSTORAGE SYNC ===== */
 const CATS=['Electronics','Fashion','Home & Living','Beauty','Fitness','Accessories'];
 const GRAD={Electronics:['#6366f1','#22d3ee'],Fashion:['#f472b6','#fb923c'],'Home & Living':['#34d399','#a3e635'],Beauty:['#f9a8d4','#c084fc'],Fitness:['#f59e0b','#ef4444'],Accessories:['#64748b','#0ea5e9']};
+
+// Your Business WhatsApp Number (Formatted with country code 92 for Pakistan)
+const BUSINESS_WHATSAPP = '923102179996';
 
 const INITIAL_RAW=`Wireless Earbuds Pro|Electronics|12900|4.6|🎧|audio,wireless,music|0|https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500&auto=format&fit=crop&q=60
 Smart Watch S2|Electronics|18500|4.4|⌚|wearable,fitness,watch|0|https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60
@@ -277,6 +283,28 @@ function vSuccess(orderId){
  const order=orders.find(o=>o.orderId===orderId)||orders[0];
  if(!order){go('home');return;}
  
+ // Format WhatsApp message
+ const itemsList = order.items.map(i => {
+  const p = byId(i.id);
+  return `• ${p ? p.n : 'Item'} x${i.q} (${fmt(p ? p.p * i.q : 0)})`;
+ }).join('\n');
+
+ const waMessage = encodeURIComponent(
+  `🛍️ *NEW ORDER PLACED - VELORA*\n\n` +
+  `*Order ID:* ${order.orderId}\n` +
+  `*Date:* ${order.date}\n\n` +
+  `*Customer Details:*\n` +
+  `Name: ${order.shipping.name}\n` +
+  `Phone: ${order.shipping.phone}\n` +
+  `City: ${order.shipping.city}\n` +
+  `Address: ${order.shipping.address}\n\n` +
+  `*Items Ordered:*\n${itemsList}\n\n` +
+  `*Payment Method:* ${order.paymentMethod.toUpperCase()}\n` +
+  `*Total Amount:* ${fmt(order.totals.total)}`
+ );
+
+ const waLink = `https://wa.me/${BUSINESS_WHATSAPP}?text=${waMessage}`;
+
  $('#app').innerHTML=`
  <div class="max-w-xl mx-auto card p-6 md:p-8 text-center space-y-6">
   <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto">✓</div>
@@ -295,6 +323,10 @@ function vSuccess(orderId){
   <div class="text-left space-y-2">
    <h3 class="font-bold text-sm">Delivery Address</h3>
    <p class="text-sm mut">${order.shipping.name} (${order.shipping.phone})<br>${order.shipping.address}, ${order.shipping.city}</p>
+  </div>
+
+  <div class="space-y-2">
+   <a href="${waLink}" target="_blank" class="block w-full py-3 bg-emerald-600 text-white font-bold rounded-xl text-center hover:bg-emerald-700 transition">💬 Confirm Order via WhatsApp</a>
   </div>
 
   <div class="flex gap-3 pt-2">
@@ -368,15 +400,20 @@ function renderAdminLogin(){
  $('#app').innerHTML=`<div class="max-w-md mx-auto card p-8 mt-12 space-y-4 text-center">
  <h1 class="text-2xl font-bold">Admin Portal</h1>
  <p class="mut text-sm">Enter secure access password to manage Velora Store.</p>
- <input id="apw" type="password" class="inp" placeholder="Password">
+ <input id="apw" type="password" class="inp" placeholder="Password" onkeydown="if(event.key==='Enter')checkAdminPw()">
  <button class="btn w-full" onclick="checkAdminPw()">Login</button>
 </div>`;
 }
 function checkAdminPw(){
- if($('#apw').value==='velorasecure999'){
+ const inputPw = document.getElementById('apw').value.trim();
+ if(inputPw==='velorasecure999'){
   sessionStorage.setItem('velora_admin_auth','true');
   go('admin');
- }else{toast('Incorrect password')}
+ }else{
+  toast('Incorrect password');
+  const pwInput = document.getElementById('apw');
+  if(pwInput){ pwInput.classList.add('bad'); setTimeout(()=>pwInput.classList.remove('bad'), 1000); }
+ }
 }
 function renderAdmin(){
  if(sessionStorage.getItem('velora_admin_auth')!=='true'){go('admin_login');return;}
@@ -417,3 +454,4 @@ saveCart();
 </script>
 </body>
 </html>
+
