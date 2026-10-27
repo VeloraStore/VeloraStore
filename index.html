@@ -53,40 +53,39 @@ body{background:var(--bg);color:var(--fg);font-family:Inter,system-ui,sans-serif
 const CATS=['Electronics','Fashion','Home & Living','Beauty','Fitness','Accessories'];
 const GRAD={Electronics:['#6366f1','#22d3ee'],Fashion:['#f472b6','#fb923c'],'Home & Living':['#34d399','#a3e635'],Beauty:['#f9a8d4','#c084fc'],Fitness:['#f59e0b','#ef4444'],Accessories:['#64748b','#0ea5e9']};
 
-const INITIAL_RAW=`Wireless Earbuds Pro|Electronics|12900|4.6|🎧|audio,wireless,music|0
-Smart Watch S2|Electronics|18500|4.4|⌚|wearable,fitness,watch|0
-Portable Bluetooth Speaker|Electronics|7500|4.5|🔊|audio,wireless,party|0
-20K Power Bank|Electronics|4200|4.3|🔋|charging,travel,phone|0
-Linen Summer Shirt|Fashion|3800|4.2|👕|shirt,casual,summer|0
-Denim Jacket|Fashion|7900|4.5|🧥|jacket,denim,winter|0
-Classic Sneakers|Fashion|8900|4.7|👟|shoes,casual,sport|0
-Merino Wool Scarf|Fashion|2200|4.1|🧣|winter,scarf,gift|0
-Ceramic Vase Set|Home & Living|3400|4.4|🏺|decor,gift,vase|0
-Aroma Diffuser|Home & Living|3900|4.6|🕯️|relax,scent,decor|0
-Cotton Throw Blanket|Home & Living|4600|4.5|🛋️|cozy,winter,decor|0
-LED Desk Lamp|Home & Living|3100|4.3|💡|office,light,study|0
-Vitamin C Serum|Beauty|2800|4.6|🧴|skincare,glow,serum|0
-Hydrating Moisturizer|Beauty|2400|4.4|🧼|skincare,daily,cream|0
-Matte Lip Kit|Beauty|1900|4.0|💄|makeup,lips,gift|0
-Argan Hair Oil|Beauty|2100|4.2|🌿|hair,care,natural|0
-Yoga Mat Pro|Fitness|3600|4.7|🧘|yoga,mat,home-workout|0
-Adjustable Dumbbells|Fitness|14500|4.5|🏋️|weights,strength,home-workout|0
-Resistance Bands Set|Fitness|1700|4.3|🎽|bands,stretch,home-workout|0
-Insulated Bottle 750ml|Fitness|1900|4.6|🧊|bottle,gym,travel|0
-Leather Wallet|Accessories|3300|4.5|👛|wallet,leather,gift|0
-Polarized Sunglasses|Accessories|4800|4.2|🕶️|sun,summer,style|0
-Canvas Backpack|Accessories|5600|4.6|🎒|bag,travel,study|0
-Phone Case Duo|Accessories|1500|3.9|📱|phone,case,protection|0`;
+const INITIAL_RAW=`Wireless Earbuds Pro|Electronics|12900|4.6|🎧|audio,wireless,music|0|https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500&auto=format&fit=crop&q=60
+Smart Watch S2|Electronics|18500|4.4|⌚|wearable,fitness,watch|0|https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60
+Portable Bluetooth Speaker|Electronics|7500|4.5|🔊|audio,wireless,party|0|https://images.unsplash.com/photo-1545454675-3531b543be5d?w=500&auto=format&fit=crop&q=60
+20K Power Bank|Electronics|4200|4.3|🔋|charging,travel,phone|0|https://images.unsplash.com/photo-1609592424104-97d4c4f74d0a?w=500&auto=format&fit=crop&q=60
+Linen Summer Shirt|Fashion|3800|4.2|👕|shirt,casual,summer|0|https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=500&auto=format&fit=crop&q=60
+Denim Jacket|Fashion|7900|4.5|🧥|jacket,denim,winter|0|https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=500&auto=format&fit=crop&q=60
+Classic Sneakers|Fashion|8900|4.7|👟|shoes,casual,sport|0|https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop&q=60
+Merino Wool Scarf|Fashion|2200|4.1|🧣|winter,scarf,gift|0|https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=500&auto=format&fit=crop&q=60
+Ceramic Vase Set|Home & Living|3400|4.4|🏺|decor,gift,vase|0|https://images.unsplash.com/photo-1581783342654-28b7e25a2b9f?w=500&auto=format&fit=crop&q=60
+Aroma Diffuser|Home & Living|3900|4.6|🕯️|relax,scent,decor|0|https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=500&auto=format&fit=crop&q=60
+Cotton Throw Blanket|Home & Living|4600|4.5|🛋️|cozy,winter,decor|0|https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=500&auto=format&fit=crop&q=60
+LED Desk Lamp|Home & Living|3100|4.3|💡|office,light,study|0|https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&auto=format&fit=crop&q=60
+Vitamin C Serum|Beauty|2800|4.6|🧴|skincare,glow,serum|0|https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=500&auto=format&fit=crop&q=60
+Hydrating Moisturizer|Beauty|2400|4.4|🧼|skincare,daily,cream|0|https://images.unsplash.com/photo-1556228720-195a672e8a03?w=500&auto=format&fit=crop&q=60
+Matte Lip Kit|Beauty|1900|4.0|💄|makeup,lips,gift|0|https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=500&auto=format&fit=crop&q=60
+Argan Hair Oil|Beauty|2100|4.2|🌿|hair,care,natural|0|https://images.unsplash.com/photo-1608248597359-97424d19335e?w=500&auto=format&fit=crop&q=60
+Yoga Mat Pro|Fitness|3600|4.7|🧘|yoga,mat,home-workout|0|https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=500&auto=format&fit=crop&q=60
+Adjustable Dumbbells|Fitness|14500|4.5|🏋️|weights,strength,home-workout|0|https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=500&auto=format&fit=crop&q=60
+Resistance Bands Set|Fitness|1700|4.3|🎽|bands,stretch,home-workout|0|https://images.unsplash.com/photo-1598289431512-b97b09177c6e?w=500&auto=format&fit=crop&q=60
+Insulated Bottle 750ml|Fitness|1900|4.6|🧊|bottle,gym,travel|0|https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&auto=format&fit=crop&q=60
+Leather Wallet|Accessories|3300|4.5|👛|wallet,leather,gift|0|https://images.unsplash.com/photo-1627123424574-724758594e93?w=500&auto=format&fit=crop&q=60
+Polarized Sunglasses|Accessories|4800|4.2|🕶️|sun,summer,style|0|https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=500&auto=format&fit=crop&q=60
+Canvas Backpack|Accessories|5600|4.6|🎒|bag,travel,study|0|https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&auto=format&fit=crop&q=60
+Phone Case Duo|Accessories|1500|3.9|📱|phone,case,protection|0|https://images.unsplash.com/photo-1601593346740-925623e07929?w=500&auto=format&fit=crop&q=60`;
 
 const ls={
  get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},
  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 };
 
-// Load products from localStorage if available, otherwise initialize real store products (0 fake sales)
 let P = ls.get('velora_products', INITIAL_RAW.split('\n').map((l,i)=>{
- const [n,c,p,r,e,t,s]=l.split('|');
- return {id:i+1, n, c, p:+p, r:+r, e, t:t.split(','), sold:0, rv:0, stock:15, sizes:c==='Fashion'?['S','M','L','XL']:null, d:`${n} — crafted for everyday use with premium materials.`};
+ const [n,c,p,r,e,t,s,img]=l.split('|');
+ return {id:i+1, n, c, p:+p, r:+r, e, t:t.split(','), sold:0, rv:0, stock:15, sizes:c==='Fashion'?['S','M','L','XL']:null, d:`${n} — crafted for everyday use with premium materials.`, img:img||''};
 }));
 
 let cart=ls.get('velora_cart',[]), orders=ls.get('velora_orders',[]), promo=ls.get('velora_promo',null);
@@ -101,7 +100,7 @@ const byId=id=>P.find(p=>p.id==id);
 const fmt=n=>'Rs. '+Math.round(n).toLocaleString('en-PK');
 const PROMOS={VELORA10:.10,WELCOME20:.20};
 
-/* ===== ROUTER & SECRET ADMIN GATE ===== */
+/* ===== ROUTER & ADMIN GATE ===== */
 function go(n,a=null){
  if(n==='admin'){renderAdmin();return;}
  view={n,a};try{location.hash=n==='pdp'?'p'+a:n}catch(e){}drawer(false);render();scrollTo(0,0)
@@ -130,7 +129,13 @@ function render(){
 }
 
 /* ===== COMPONENTS ===== */
-const tile=(p,cls='h-44',big=false,ang=135)=>{const[a,b]=GRAD[p.c]||['#6366f1','#22d3ee'];return`<div class="${cls} rounded-xl flex items-center justify-center ${big?'text-8xl':'text-6xl'}" style="background:linear-gradient(${ang}deg,${a},${b})">${p.e||'📦'}</div>`};
+const tile=(p,cls='h-44',big=false,ang=135)=>{
+ const[a,b]=GRAD[p.c]||['#6366f1','#22d3ee'];
+ if(p.img && p.img.trim()!==''){
+  return `<div class="${cls} rounded-xl overflow-hidden flex items-center justify-center bg-gray-100"><img src="${p.img}" alt="${p.n}" class="w-full h-full object-cover"></div>`;
+ }
+ return `<div class="${cls} rounded-xl flex items-center justify-center ${big?'text-8xl':'text-6xl'}" style="background:linear-gradient(${ang}deg,${a},${b})">${p.e||'📦'}</div>`;
+};
 const stars=r=>`<span class="text-amber-500">${'★'.repeat(Math.round(r))}${'☆'.repeat(5-Math.round(r))}</span> <span class="text-xs mut">${r.toFixed(1)}</span>`;
 const stockTag=p=>p.stock===0?'<span class="text-red-600 text-sm">Out of stock</span>':p.stock<=5?`<span class="text-amber-600 text-sm">Only ${p.stock} left</span>`:'<span class="text-sm" style="color:var(--ac)">In stock</span>';
 const cardHtml=p=>`<div class="card hv p-3 flex flex-col"><div class="cursor-pointer" onclick="go('pdp',${p.id})">${tile(p)}<div class="mt-3 text-xs mut">${p.c}</div><div class="font-semibold leading-tight">${p.n}</div><div class="mt-1">${stars(p.r)}</div></div>
@@ -180,7 +185,6 @@ function onSearch(v){F.q=v;if(view.n!=='shop')go('shop');else grid()}
 function vPdp(){
  const p=byId(view.a); if(!p)return go('shop');
  sel={color:'Charcoal',size:p.sizes?'M':null,qty:1};
- const rel=P.filter(x=>x.c===p.c&&x.id!==p.id).slice(0,4);
  $('#app').innerHTML=`<a class="text-sm mut cursor-pointer" onclick="go('shop')">← Back to shop</a>
  <div class="grid md:grid-cols-2 gap-8 mt-3">
   <div><div id="main">${tile(p,'h-96',true)}</div></div>
@@ -311,7 +315,7 @@ function renderAdmin(){
     <div class="space-y-2 max-h-[500px] overflow-y-auto">
      ${P.map(p=>`<div class="card p-3 flex items-center justify-between text-sm">
       <div class="flex items-center gap-3">
-       <div class="w-10 h-10 rounded flex items-center justify-center text-xl bg-gray-100">${p.e}</div>
+       <div class="w-10 h-10 rounded overflow-hidden flex items-center justify-center text-xl bg-gray-100">${p.img?`<img src="${p.img}" class="w-full h-full object-cover">`:p.e}</div>
        <div><b>${p.n}</b><div class="mut text-xs">${p.c} · Stock: ${p.stock} · ${fmt(p.p)}</div></div>
       </div>
       <div class="flex gap-2">
@@ -326,18 +330,19 @@ function renderAdmin(){
 }
 
 function openProductModal(editId=null){
- const p=editId?byId(editId):{n:'',c:CATS[0],p:1000,e:'📦',stock:10,d:''};
+ const p=editId?byId(editId):{n:'',c:CATS[0],p:1000,e:'📦',stock:10,d:'',img:''};
  const modalHtml=`<div id="pmodal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
   <div class="card p-6 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto">
    <h2 class="text-xl font-bold">${editId?'Edit Product':'Add New Product'}</h2>
    <label class="block text-sm">Product Name<input id="pn" class="inp mt-1" value="${p.n}"></label>
    <label class="block text-sm">Category<select id="pc" class="inp mt-1">${CATS.map(c=>`<option ${p.c===c?'selected':''}>${c}</option>`).join('')}</select></label>
+   <label class="block text-sm">Product Image URL (Link)<input id="pi" class="inp mt-1" placeholder="https://images.unsplash.com/..." value="${p.img||''}"></label>
    <div class="grid grid-cols-2 gap-3">
     <label class="block text-sm">Price (PKR)<input type="number" id="pp" class="inp mt-1" value="${p.p}"></label>
     <label class="block text-sm">Stock Quantity<input type="number" id="ps" class="inp mt-1" value="${p.stock}"></label>
    </div>
    <div class="grid grid-cols-2 gap-3">
-    <label class="block text-sm">Emoji Icon<input id="pe" class="inp mt-1" value="${p.e}"></label>
+    <label class="block text-sm">Emoji Fallback<input id="pe" class="inp mt-1" value="${p.e}"></label>
     <label class="block text-sm">Rating<input type="number" step="0.1" max="5" id="pr" class="inp mt-1" value="${p.r||4.5}"></label>
    </div>
    <label class="block text-sm">Description<textarea id="pd" class="inp mt-1">${p.d}</textarea></label>
@@ -350,6 +355,10 @@ function openProductModal(editId=null){
  document.body.insertAdjacentHTML('beforeend',modalHtml);
 }
 
+function editProduct(id){
+ openProductModal(id);
+}
+
 function saveProduct(id){
  const name=$('#pn').value.trim();
  if(!name){toast('Product name required');return;}
@@ -360,6 +369,7 @@ function saveProduct(id){
   p:parseFloat($('#pp').value)||0,
   stock:parseInt($('#ps').value)||0,
   e:$('#pe').value||'📦',
+  img:$('#pi').value.trim(),
   r:parseFloat($('#pr').value)||4.5,
   t:['new'],
   d:$('#pd').value||'',
