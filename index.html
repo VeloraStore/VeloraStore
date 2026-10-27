@@ -5,13 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Velora – Modern Store</title>
 <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-<!-- EMAILJS SDK -->
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<script type="text/javascript">
-   (function(){
-      emailjs.init("NJ4kYNe8aLsepH952"); // <-- Your EmailJS Public Key is initialized here
-   })();
-</script>
 <style>
 :root{--bg:#f7f7f8;--fg:#1f2326;--card:#fff;--bd:#e5e7eb;--mut:#6b7280;--ac:#059669;--ac2:#4f46e5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111315;--fg:#eceef0;--card:#1b1e21;--bd:#2c3034;--mut:#9ca3af}}
@@ -246,43 +239,14 @@ function payUI(){
   ep:`<div class="rounded-xl p-4 text-sm" style="background:#05966914"><p>Transfer <b>${fmt(t.total)}</b> to account <b>0321800213</b> (Muhammad Ali Ashfaq), then enter your Txn ID.</p></div><input id="tx" class="inp mt-3" placeholder="Transaction ID">`,
   cod:`<p class="text-sm mut">Pay in cash upon delivery.</p>`}[pay];
 }
-
 function placeOrder(){
  let ok=true;const chk=(id,fn)=>{const e=$('#'+id);if(!e)return;const v=e.value.trim(),g=fn(v);e.classList.toggle('bad',!g);if(!g)ok=false};
  chk('fn',v=>v.length>2);chk('ph',v=>/^[0-9+\s-]{10,14}$/.test(v));chk('em',v=>/^\S+@\S+\.\S+$/.test(v));chk('ct',v=>v.length>1);chk('ad',v=>v.length>5);
  if(!ok){toast('Please check required fields');return}
- 
  const t=totals(),id='VLR-'+Math.random().toString(36).slice(2,8).toUpperCase();
- const customerName = $('#fn').value;
- const customerPhone = $('#ph').value;
- const shippingAddress = $('#ad').value;
- const city = $('#ct').value;
- 
- const orderItemsText = cart.map(i => `${i.q}x ${byId(i.id).n} (${i.color}${i.size ? ', ' + i.size : ''}) - ${fmt(byId(i.id).p * i.q)}`).join('\n');
- const totalPriceText = fmt(t.total);
-
- const o={id,date:new Date().toLocaleString(),pay:{card:'Card',ep:'Easypaisa',cod:'Cash'}[pay],name:customerName,addr:shippingAddress+', '+city,items:cart.map(i=>({n:byId(i.id).n,v:i.color,q:i.q,p:byId(i.id).p})),t,status:'Pending'};
- 
- // EMAILJS INTEGRATION TRIGGER
- const emailParams = {
-    customer_name: customerName,
-    customer_phone: customerPhone,
-    shipping_address: shippingAddress,
-    city: city,
-    order_items: orderItemsText,
-    total_price: totalPriceText
- };
-
- emailjs.send('service_m42qo2h', 'template_z2jv4ow', emailParams)
-    .then(function(response) {
-        console.log('EmailJS Success:', response.status, response.text);
-    }, function(error) {
-        console.error('EmailJS Error:', error);
-    });
-
+ const o={id,date:new Date().toLocaleString(),pay:{card:'Card',ep:'Easypaisa',cod:'Cash'}[pay],name:$('#fn').value,addr:$('#ad').value+', '+$('#ct').value,items:cart.map(i=>({n:byId(i.id).n,v:i.color,q:i.q,p:byId(i.id).p})),t,status:'Pending'};
  orders.unshift(o);ls.set('velora_orders',orders);cart=[];promo=null;saveCart();go('success',o.id);
 }
-
 const receipt=o=>`<div class="text-sm space-y-1">${o.items.map(i=>`<div class="flex justify-between"><span>${i.q}× ${i.n}</span>${fmt(i.p*i.q)}</div>`).join('')}</div><hr class="my-2" style="border-color:var(--bd)">${sumHtml(o.t)}<div class="text-xs mut mt-2">Payment: ${o.pay}<br>Ship to: ${o.name}, ${o.addr}</div>`;
 function vSuccess(){
  const o=orders.find(x=>x.id===view.a)||orders[0];if(!o)return go('home');
@@ -303,8 +267,8 @@ function renderAdminLogin(){
  </div>`;
 }
 function verifyAdmin(){
- const val=$('#apass'].value;
- if(val==='VeloraAdmin2026!'){
+ const val=$('#apass').value;
+ if(val==='abc123abc'){
   sessionStorage.setItem('velora_admin_auth','true');
   go('admin');
  } else {
