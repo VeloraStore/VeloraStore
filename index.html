@@ -116,6 +116,8 @@ function fromHash(){
   }
  } else if(/^p\d+$/.test(h)){
   view={n:'pdp',a:+h.slice(1)}; render();
+ } else if(/^success-/.test(h)){
+  view={n:'success',a:h.replace('success-','')}; render();
  } else if(['home','shop','checkout','orders'].includes(h)){
   view={n:h,a:null}; render();
  } else {
@@ -125,7 +127,7 @@ function fromHash(){
 addEventListener('hashchange',()=>{fromHash()});
 function render(){
  if(view.n==='admin'||view.n==='admin_login')return;
- ({home:vHome,shop:vShop,pdp:vPdp,checkout:vCheckout,success:vSuccess,orders:vOrders})[view.n]();
+ ({home:vHome,shop:vShop,pdp:vPdp,checkout:vCheckout,success:()=>vSuccess(view.a),orders:vOrders})[view.n]();
 }
 
 /* ===== COMPONENTS ===== */
@@ -219,176 +221,199 @@ function renderDrawer(){
  $('#dfoot').innerHTML=cart.length?`<div class="flex gap-2 mb-3"><input id="pc" class="inp" placeholder="Promo code" value="${promo||''}"><button class="ghost btn" onclick="applyPromo()">Apply</button></div>${sumHtml(t)}<button class="btn w-full mt-3 py-3" onclick="go('checkout')">Checkout</button>`:'';
 }
 
-let pay='card';
+let pay='cod';
 function vCheckout(){
  if(!cart.length){$('#app').innerHTML='<div class="text-center py-20"><p class="mut">Your cart is empty.</p><button class="btn mt-4" onclick="go(\'shop\')">Go shopping</button></div>';return}
  const t=totals(),f=(id,l,ph='',ex='')=>`<label class="block text-sm">${l}<input id="${id}" class="inp mt-1" placeholder="${ph}" ${ex}></label>`;
  $('#app').innerHTML=`<h1 class="text-2xl font-bold mb-4">Secure checkout</h1><div class="grid md:grid-cols-[1fr_340px] gap-6">
  <div class="space-y-5">
-  <section class="card p-5"><h2 class="font-bold mb-3">1. Delivery details</h2><div class="grid sm:grid-cols-2 gap-3">${f('fn','Full name','Muhammad Ali')}${f('ph','Phone','03xx xxxxxxx')}${f('em','Email','you@example.com')}${f('ct','City','Karachi')}<div class="sm:col-span-2">${f('ad','Street address','House, street, area')}</div></div></section>
+  <section class="card p-5"><h2 class="font-bold mb-3">1. Delivery details</h2><div class="grid sm:grid-cols-2 gap-3">${f('fn','Full name','Muhammad Ali','required')}${f('ph','Phone','03xx-xxxxxxx','required')}${f('em','Email','you@example.com')}${f('ct','City','Karachi','required')}<div class="sm:col-span-2">${f('ad','Street address & area','House, street, society name','required')}</div></div></section>
   <section class="card p-5"><h2 class="font-bold mb-3">2. Payment method</h2>
-   <div class="flex flex-wrap gap-2 mb-4">${[['card','Credit / Debit Card'],['ep','Easypaisa'],['cod','Cash on Delivery']].map(([v,l])=>`<span class="chip ${pay===v?'on':''}" onclick="pay='${v}';payUI()">${l}</span>`).join('')}</div><div id="payui"></div></section>
-  <button class="btn w-full py-3 text-lg" onclick="placeOrder()">Place order · ${fmt(t.total)}</button></div>
- <aside class="card p-5 h-fit space-y-3"><h2 class="font-bold">Order summary</h2>${cart.map(lineHtml).join('')}<hr style="border-color:var(--bd)">${sumHtml(t)}</aside></div>`;
+   <div class="flex flex-wrap gap-2 mb-4">${[['cod','Cash on Delivery (COD)'],['ep','Easypaisa / JazzCash'],['card','Credit / Debit Card']].map(([v,l])=>`<span class="chip ${pay===v?'on':''}" onclick="pay='${v}';payUI()">${l}</span>`).join('')}</div>
+   <div id="pdetails" class="text-sm mut">Pay with cash upon safe doorstep delivery.</div>
+  </section>
+ </div>
+ <div class="card p-5 h-fit space-y-4">
+  <h2 class="font-bold">Order Summary</h2>
+  <div class="max-h-48 overflow-y-auto space-y-2">${cart.map(i=>{const p=byId(i.id);return `<div class="flex justify-between text-sm"><span>${p.n} × ${i.q}</span><b>${fmt(p.p*i.q)}</b></div>`}).join('')}</div>
+  <hr style="border-color:var(--bd)">
+  ${sumHtml(t)}
+  <button class="btn w-full py-3 mt-2" onclick="placeOrder()">Place Order</button>
+ </div></div>`;
  payUI();
 }
 function payUI(){
- const t=totals();
- $('#payui').innerHTML={
-  card:`<div class="grid sm:grid-cols-2 gap-3"><div class="sm:col-span-2"><input id="cn" class="inp" placeholder="Cardholder name"></div><div class="sm:col-span-2"><input id="cu" class="inp" placeholder="Card number"></div><input id="ce" class="inp" placeholder="MM/YY"><input id="cv" class="inp" placeholder="CVV"></div>`,
-  ep:`<div class="rounded-xl p-4 text-sm" style="background:#05966914"><p>Transfer <b>${fmt(t.total)}</b> to account <b>0321800213</b> (Muhammad Ali Ashfaq), then enter your Txn ID.</p></div><input id="tx" class="inp mt-3" placeholder="Transaction ID">`,
-  cod:`<p class="text-sm mut">Pay in cash upon delivery.</p>`}[pay];
-}
-function placeOrder(){
- let ok=true;const chk=(id,fn)=>{const e=$('#'+id);if(!e)return;const v=e.value.trim(),g=fn(v);e.classList.toggle('bad',!g);if(!g)ok=false};
- chk('fn',v=>v.length>2);chk('ph',v=>/^[0-9+\s-]{10,14}$/.test(v));chk('em',v=>/^\S+@\S+\.\S+$/.test(v));chk('ct',v=>v.length>1);chk('ad',v=>v.length>5);
- if(!ok){toast('Please check required fields');return}
- const t=totals(),id='VLR-'+Math.random().toString(36).slice(2,8).toUpperCase();
- const o={id,date:new Date().toLocaleString(),pay:{card:'Card',ep:'Easypaisa',cod:'Cash'}[pay],name:$('#fn').value,addr:$('#ad').value+', '+$('#ct').value,items:cart.map(i=>({n:byId(i.id).n,v:i.color,q:i.q,p:byId(i.id).p})),t,status:'Pending'};
- orders.unshift(o);ls.set('velora_orders',orders);cart=[];promo=null;saveCart();go('success',o.id);
-}
-const receipt=o=>`<div class="text-sm space-y-1">${o.items.map(i=>`<div class="flex justify-between"><span>${i.q}× ${i.n}</span>${fmt(i.p*i.q)}</div>`).join('')}</div><hr class="my-2" style="border-color:var(--bd)">${sumHtml(o.t)}<div class="text-xs mut mt-2">Payment: ${o.pay}<br>Ship to: ${o.name}, ${o.addr}</div>`;
-function vSuccess(){
- const o=orders.find(x=>x.id===view.a)||orders[0];if(!o)return go('home');
- $('#app').innerHTML=`<div class="max-w-xl mx-auto text-center"><div class="text-6xl">✅</div><h1 class="text-3xl font-extrabold mt-2">Thank you, ${o.name.split(' ')[0]}!</h1><p class="mut">Your order has been placed.</p><div class="card p-5 mt-5 text-left"><div class="flex justify-between mb-3"><b>${o.id}</b><span class="text-xs mut">${o.date}</span></div>${receipt(o)}</div><button class="btn mt-5" onclick="go('shop')">Continue shopping</button></div>`;
-}
-function vOrders(){
- $('#app').innerHTML=`<h1 class="text-2xl font-bold mb-4">Order history</h1>`+(orders.length?`<div class="space-y-4">${orders.map(o=>`<div class="card p-5"><div class="flex justify-between mb-2"><b>${o.id}</b><span class="text-xs mut">${o.date}</span></div>${receipt(o)}</div>`).join('')}</div>`:'<p class="mut">No orders yet.</p>');
+ const d=$('#pdetails');
+ if(!d)return;
+ if(pay==='cod')d.textContent='Pay with cash upon safe doorstep delivery.';
+ if(pay==='ep')d.textContent='Transfer funds to Easypaisa account: 0300-1234567 (Velora Store) and keep your receipt handy.';
+ if(pay==='card')d.innerHTML='<div class="grid grid-gap-2 space-y-2"><input class="inp" placeholder="Card Number (4111 2222...)"/><div class="grid grid-cols-2 gap-2"><input class="inp" placeholder="MM/YY"/><input class="inp" placeholder="CVV"/></div></div>';
 }
 
-/* ===== SECURE ADMIN PANEL ===== */
-function renderAdminLogin(){
- $('#app').innerHTML=`<div class="max-w-md mx-auto card p-8 mt-12 text-center">
-  <h1 class="text-2xl font-bold mb-2">Admin Portal</h1>
-  <p class="mut text-sm mb-6">Enter your master password to access store management.</p>
-  <input type="password" id="apass" class="inp mb-4" placeholder="Master Password">
-  <button class="btn w-full py-3" onclick="verifyAdmin()">Login to Admin</button>
-  <button class="ghost btn w-full mt-2" onclick="go('home')">Return to Store</button>
+function placeOrder(){
+ const fn=$('#fn').value.trim(), ph=$('#ph').value.trim(), ct=$('#ct').value.trim(), ad=$('#ad').value.trim();
+ if(!fn||!ph||!ct||!ad){toast('Please fill in all required delivery fields.');return;}
+ 
+ const orderId='#VL-'+Math.floor(10000+Math.random()*90000);
+ const newOrder={
+  orderId,
+  date:new Date().toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}),
+  items:[...cart],
+  shipping:{name:fn,phone:ph,city:ct,address:ad},
+  totals:totals(),
+  paymentMethod:pay,
+  status:'Order Confirmed'
+ };
+ 
+ orders.unshift(newOrder);
+ ls.set('velora_orders', orders);
+ cart=[];
+ promo=null;
+ saveCart();
+ go('success', orderId);
+}
+
+function vSuccess(orderId){
+ const order=orders.find(o=>o.orderId===orderId)||orders[0];
+ if(!order){go('home');return;}
+ 
+ $('#app').innerHTML=`
+ <div class="max-w-xl mx-auto card p-6 md:p-8 text-center space-y-6">
+  <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto">✓</div>
+  <div>
+   <h1 class="text-2xl font-extrabold">Order Confirmed Successfully!</h1>
+   <p class="mut text-sm mt-1">Thank you for shopping with Velora. Your order has been placed.</p>
+  </div>
+  
+  <div class="p-4 rounded-xl text-left space-y-2 border" style="border-color:var(--bd);background:var(--bg)">
+   <div class="flex justify-between items-center"><span class="text-sm mut">Order Reference</span><b class="text-emerald-600 text-lg">${order.orderId}</b></div>
+   <div class="flex justify-between text-sm"><span class="mut">Date</span><span>${order.date}</span></div>
+   <div class="flex justify-between text-sm"><span class="mut">Payment</span><span class="uppercase">${order.paymentMethod}</span></div>
+   <div class="flex justify-between text-sm"><span class="mut">Estimated Delivery</span><span>3–4 Business Days</span></div>
+  </div>
+
+  <div class="text-left space-y-2">
+   <h3 class="font-bold text-sm">Delivery Address</h3>
+   <p class="text-sm mut">${order.shipping.name} (${order.shipping.phone})<br>${order.shipping.address}, ${order.shipping.city}</p>
+  </div>
+
+  <div class="flex gap-3 pt-2">
+   <button class="ghost btn flex-1" onclick="go('shop')">Continue Shopping</button>
+   <button class="btn flex-1" onclick="go('orders')">View My Orders</button>
+  </div>
  </div>`;
 }
-function verifyAdmin(){
- const val=$('#apass').value;
- if(val==='abc123abc'){
+
+function vOrders(){
+ $('#app').innerHTML=`
+ <h1 class="text-2xl font-bold mb-4">Track Your Orders</h1>
+ <div class="card p-4 max-w-xl mb-6 flex gap-2">
+  <input id="trackingInput" class="inp" placeholder="Enter Order ID (e.g. #VL-49821)">
+  <button id="trackBtn" class="btn" onclick="lookupOrder()">Track</button>
+ </div>
+ <div id="trackingResultContainer"></div>
+ <h2 class="text-xl font-bold mt-8 mb-4">Recent Orders History</h2>
+ <div id="ordersList" class="space-y-4"></div>`;
+ renderOrdersList();
+}
+
+function lookupOrder(){
+ const query=$('#trackingInput').value.trim().toUpperCase();
+ const container=$('#trackingResultContainer');
+ if(!query){toast('Please enter an Order ID');return;}
+ 
+ const found=orders.find(o=>o.orderId.toUpperCase()===query);
+ if(!found){
+  container.innerHTML=`<div class="card p-4 text-center text-red-500 text-sm">No order found matching "${query}". Please check your Order ID.</div>`;
+  return;
+ }
+ 
+ container.innerHTML=`
+ <div class="card p-5 space-y-3 mb-6 border-2 border-emerald-500">
+  <div class="flex justify-between items-center">
+   <b class="text-lg">${found.orderId}</b>
+   <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">${found.status}</span>
+  </div>
+  <p class="text-sm mut">Placed on ${found.date} · Delivery to <b>${found.shipping.name}</b> (${found.shipping.city})</p>
+  <div class="space-y-1 text-sm border-t pt-3" style="border-color:var(--bd)">
+   ${found.items.map(i=>{const p=byId(i.id);return `<div class="flex justify-between"><span>${p?p.n:'Product'} × ${i.q}</span><span>${fmt(p?p.p*i.q:0)}</span></div>`}).join('')}
+  </div>
+  <div class="flex justify-between font-bold pt-2 border-t" style="border-color:var(--bd)">
+   <span>Total Amount:</span><span>${fmt(found.totals.total)}</span>
+  </div>
+ </div>`;
+}
+
+function renderOrdersList(){
+ const list=$('#ordersList');
+ if(!orders.length){
+  list.innerHTML='<p class="mut">No past orders found on this device yet.</p>';
+  return;
+ }
+ list.innerHTML=orders.map(o=>`
+ <div class="card p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+  <div>
+   <div class="flex items-center gap-2">
+    <b>${o.orderId}</b>
+    <span class="text-xs px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-medium">${o.status}</span>
+   </div>
+   <div class="text-sm mut mt-1">${o.date} · ${o.shipping.city} · <b>${fmt(o.totals.total)}</b></div>
+  </div>
+  <button class="ghost btn text-sm" onclick="go('success', '${o.orderId}')">View Details</button>
+ </div>`).join('');
+}
+
+/* ===== ADMIN PORTAL ===== */
+function renderAdminLogin(){
+ $('#app').innerHTML=`<div class="max-w-md mx-auto card p-8 mt-12 space-y-4 text-center">
+ <h1 class="text-2xl font-bold">Admin Portal</h1>
+ <p class="mut text-sm">Enter secure access password to manage Velora Store.</p>
+ <input id="apw" type="password" class="inp" placeholder="Password">
+ <button class="btn w-full" onclick="checkAdminPw()">Login</button>
+</div>`;
+}
+function checkAdminPw(){
+ if($('#apw').value==='velorasecure999'){
   sessionStorage.setItem('velora_admin_auth','true');
   go('admin');
- } else {
-  toast('Incorrect password');
- }
+ }else{toast('Incorrect password')}
 }
-
 function renderAdmin(){
- const totalRev=orders.reduce((sum,o)=>sum+o.t.total,0);
- const lowStock=P.filter(p=>p.stock<=5).length;
- 
- $('#app').innerHTML=`<div class="space-y-6">
-  <div class="flex justify-between items-center flex-wrap gap-3">
-   <div><h1 class="text-3xl font-extrabold">Store Admin Panel</h1><p class="mut text-sm">Manage products, inventory, and orders.</p></div>
-   <div class="flex gap-2">
-    <button class="btn btn2" onclick="openProductModal()">+ Add New Product</button>
-    <button class="ghost btn" onclick="sessionStorage.removeItem('velora_admin_auth');go('home')">Logout</button>
-   </div>
+ if(sessionStorage.getItem('velora_admin_auth')!=='true'){go('admin_login');return;}
+ $('#app').innerHTML=`
+ <div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-bold">Store Admin Panel</h1>
+  <button class="ghost btn text-sm" onclick="sessionStorage.removeItem('velora_admin_auth');go('home')">Logout</button>
+ </div>
+ <div class="grid md:grid-cols-3 gap-6 mb-8">
+  <div class="card p-5"><div class="mut text-sm">Total Orders</div><div class="text-3xl font-extrabold mt-1">${orders.length}</div></div>
+  <div class="card p-5"><div class="mut text-sm">Total Revenue</div><div class="text-3xl font-extrabold mt-1">${fmt(orders.reduce((s,o)=>s+o.totals.total,0))}</div></div>
+  <div class="card p-5"><div class="mut text-sm">Products Listed</div><div class="text-3xl font-extrabold mt-1">${P.length}</div></div>
+ </div>
+ <h2 class="text-xl font-bold mb-4">Customer Orders Management</h2>
+ <div class="space-y-3">${orders.length?orders.map(o=>`
+ <div class="card p-4 flex flex-col md:flex-row justify-between gap-4">
+  <div>
+   <div class="flex items-center gap-2"><b>${o.orderId}</b><span class="text-xs mut">${o.date}</span></div>
+   <div class="text-sm mt-1"><b>${o.shipping.name}</b> (${o.shipping.phone}) — ${o.shipping.address}, ${o.shipping.city}</div>
+   <div class="text-xs mut mt-1">${o.items.map(i=>`${byId(i.id)?.n||'Item'} (${i.q})`).join(', ')}</div>
   </div>
-
-  <!-- METRICS -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-   <div class="card p-4"><div class="mut text-xs">Total Revenue</div><div class="text-2xl font-bold mt-1">${fmt(totalRev)}</div></div>
-   <div class="card p-4"><div class="mut text-xs">Total Orders</div><div class="text-2xl font-bold mt-1">${orders.length}</div></div>
-   <div class="card p-4"><div class="mut text-xs">Active Products</div><div class="text-2xl font-bold mt-1">${P.length}</div></div>
-   <div class="card p-4"><div class="mut text-xs">Low Stock Items</div><div class="text-2xl font-bold mt-1 text-amber-600">${lowStock}</div></div>
+  <div class="flex items-center gap-3">
+   <b>${fmt(o.totals.total)}</b>
+   <select class="inp !w-auto text-sm" onchange="updateStatus('${o.orderId}', this.value)">
+    ${['Order Confirmed','Processing','Dispatched / In Transit','Delivered'].map(s=>`<option ${o.status===s?'selected':''}>${s}</option>`).join('')}
+   </select>
   </div>
-
-  <!-- TABS CONTENT -->
-  <div class="grid md:grid-cols-2 gap-6">
-   <section class="card p-5">
-    <h2 class="font-bold text-lg mb-4">Customer Orders (${orders.length})</h2>
-    <div class="space-y-3 max-h-[500px] overflow-y-auto">
-     ${orders.length?orders.map(o=>`<div class="card p-3 text-sm">
-      <div class="flex justify-between font-semibold"><span>${o.id} - ${o.name}</span><span>${fmt(o.t.total)}</span></div>
-      <div class="mut text-xs">${o.date} · Payment: ${o.pay}</div>
-      <div class="text-xs mt-1">Items: ${o.items.map(i=>i.q+'x '+i.n).join(', ')}</div>
-     </div>`).join(''):'<p class="mut text-sm">No orders received yet.</p>'}
-    </div>
-   </section>
-
-   <section class="card p-5">
-    <h2 class="font-bold text-lg mb-4">Product Catalog (${P.length})</h2>
-    <div class="space-y-2 max-h-[500px] overflow-y-auto">
-     ${P.map(p=>`<div class="card p-3 flex items-center justify-between text-sm">
-      <div class="flex items-center gap-3">
-       <div class="w-10 h-10 rounded overflow-hidden flex items-center justify-center text-xl bg-gray-100">${p.img?`<img src="${p.img}" class="w-full h-full object-cover">`:p.e}</div>
-       <div><b>${p.n}</b><div class="mut text-xs">${p.c} · Stock: ${p.stock} · ${fmt(p.p)}</div></div>
-      </div>
-      <div class="flex gap-2">
-       <button class="ghost btn text-xs py-1 px-2" onclick="editProduct(${p.id})">Edit</button>
-       <button class="btn bg-red-600 text-xs py-1 px-2" onclick="deleteProduct(${p.id})">Delete</button>
-      </div>
-     </div>`).join('')}
-    </div>
-   </section>
-  </div>
- </div>`;
+ </div>`).join(''):'<p class="mut">No orders placed yet.</p>'}</div>`;
+}
+function updateStatus(orderId, st){
+ const o=orders.find(x=>x.orderId===orderId);
+ if(o){o.status=st;ls.set('velora_orders',orders);toast('Status updated to '+st);}
 }
 
-function openProductModal(editId=null){
- const p=editId?byId(editId):{n:'',c:CATS[0],p:1000,e:'📦',stock:10,d:'',img:''};
- const modalHtml=`<div id="pmodal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-  <div class="card p-6 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto">
-   <h2 class="text-xl font-bold">${editId?'Edit Product':'Add New Product'}</h2>
-   <label class="block text-sm">Product Name<input id="pn" class="inp mt-1" value="${p.n}"></label>
-   <label class="block text-sm">Category<select id="pc" class="inp mt-1">${CATS.map(c=>`<option ${p.c===c?'selected':''}>${c}</option>`).join('')}</select></label>
-   <label class="block text-sm">Product Image URL (Link)<input id="pi" class="inp mt-1" placeholder="https://images.unsplash.com/..." value="${p.img||''}"></label>
-   <div class="grid grid-cols-2 gap-3">
-    <label class="block text-sm">Price (PKR)<input type="number" id="pp" class="inp mt-1" value="${p.p}"></label>
-    <label class="block text-sm">Stock Quantity<input type="number" id="ps" class="inp mt-1" value="${p.stock}"></label>
-   </div>
-   <div class="grid grid-cols-2 gap-3">
-    <label class="block text-sm">Emoji Fallback<input id="pe" class="inp mt-1" value="${p.e}"></label>
-    <label class="block text-sm">Rating<input type="number" step="0.1" max="5" id="pr" class="inp mt-1" value="${p.r||4.5}"></label>
-   </div>
-   <label class="block text-sm">Description<textarea id="pd" class="inp mt-1">${p.d}</textarea></label>
-   <div class="flex justify-end gap-2 pt-2">
-    <button class="ghost btn" onclick="$('#pmodal').remove()">Cancel</button>
-    <button class="btn" onclick="saveProduct(${editId||''})">Save Product</button>
-   </div>
-  </div>
- </div>`;
- document.body.insertAdjacentHTML('beforeend',modalHtml);
-}
-
-function editProduct(id){
- openProductModal(id);
-}
-
-function saveProduct(id){
- const name=$('#pn').value.trim();
- if(!name){toast('Product name required');return;}
- const prod={
-  id:id?id:Date.now(),
-  n:name,
-  c:$('#pc').value,
-  p:parseFloat($('#pp').value)||0,
-  stock:parseInt($('#ps').value)||0,
-  e:$('#pe').value||'📦',
-  img:$('#pi').value.trim(),
-  r:parseFloat($('#pr').value)||4.5,
-  t:['new'],
-  d:$('#pd').value||'',
-  sold:id?byId(id).sold:0,
-  rv:id?byId(id).rv:10
- };
- if(id){const idx=P.findIndex(x=>x.id==id);P[idx]=prod;}else{P.unshift(prod);}
- saveProducts();$('#pmodal').remove();toast('Product saved successfully');renderAdmin();
-}
-
-function deleteProduct(id){
- if(confirm('Are you sure you want to delete this product?')){
-  P=P.filter(x=>x.id!==id);
-  saveProducts();toast('Product deleted');renderAdmin();
- }
-}
-
-/* ===== INIT ===== */
-fromHash();saveCart();
+// Init
+fromHash();
+saveCart();
 </script>
 </body>
 </html>
