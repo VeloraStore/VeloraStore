@@ -17,8 +17,12 @@ body{background:var(--bg);color:var(--fg);font-family:Inter,system-ui,sans-serif
 .inp.bad{border-color:#dc2626;background:#dc26260d}
 .btn{background:var(--ac);color:#fff;border-radius:.7rem;padding:.6rem 1.1rem;font-weight:600;transition:.2s}.btn:hover{filter:brightness(1.1)}
 .btn2{background:var(--ac2)}.ghost{border:1px solid var(--bd);background:var(--card);color:var(--fg)}
+.danger{background:#dc2626;color:#fff;border-radius:.6rem;padding:.35rem .8rem;font-weight:600;font-size:.8rem}.danger:hover{filter:brightness(1.1)}
 .chip{border:1px solid var(--bd);border-radius:.6rem;padding:.3rem .7rem;cursor:pointer}.chip.on{border-color:var(--ac2);background:var(--ac2);color:#fff}
 .mut{color:var(--mut)}
+.atab{padding:.55rem 1rem;border-bottom:2px solid transparent;font-weight:600;color:var(--mut)}.atab.on{color:var(--ac);border-color:var(--ac)}
+.ptbl{width:100%;font-size:.875rem;border-collapse:collapse;min-width:640px}.ptbl th{text-align:left;font-weight:600;color:var(--mut);padding:.5rem;border-bottom:1px solid var(--bd)}.ptbl td{padding:.5rem;border-bottom:1px solid var(--bd);vertical-align:middle}
+.ptbl .inp{padding:.3rem .5rem}
 #drawer{transition:transform .3s}
 </style>
 </head>
@@ -393,6 +397,9 @@ function renderOrdersList(){
 }
 
 /* ===== ADMIN PORTAL ===== */
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let aTab='products', aq='';
+
 function renderAdminLogin(){
  $('#app').innerHTML=`<div class="max-w-md mx-auto card p-8 mt-12 space-y-4 text-center">
  <h1 class="text-2xl font-bold">Admin Portal</h1>
@@ -419,13 +426,26 @@ function checkAdminPw(){
  }
 }
 
+function setTab(t){aTab=t;renderAdmin()}
+
 function renderAdmin(){
- if(sessionStorage.getItem('velora_admin_auth')!=='true'){go('admin_login');return;}
+ if(sessionStorage.getItem('velora_admin_auth')!=='true'){renderAdminLogin();return;}
+ view={n:'admin',a:null};
  $('#app').innerHTML=`
- <div class="flex justify-between items-center mb-6">
+ <div class="flex justify-between items-center mb-4">
   <h1 class="text-2xl font-bold">Store Admin Panel</h1>
   <button class="ghost btn text-sm" onclick="sessionStorage.removeItem('velora_admin_auth');go('home')">Logout</button>
  </div>
+ <div class="flex gap-2 border-b mb-6" style="border-color:var(--bd)">
+  <button class="atab ${aTab==='products'?'on':''}" onclick="setTab('products')">Products</button>
+  <button class="atab ${aTab==='orders'?'on':''}" onclick="setTab('orders')">Orders</button>
+ </div>
+ <div id="atab"></div>`;
+ aTab==='orders'?adminOrders():adminProducts();
+}
+
+function adminOrders(){
+ $('#atab').innerHTML=`
  <div class="grid md:grid-cols-3 gap-6 mb-8">
   <div class="card p-5"><div class="mut text-sm">Total Orders</div><div class="text-3xl font-extrabold mt-1">${orders.length}</div></div>
   <div class="card p-5"><div class="mut text-sm">Total Revenue</div><div class="text-3xl font-extrabold mt-1">${fmt(orders.reduce((s,o)=>s+o.totals.total,0))}</div></div>
@@ -451,6 +471,97 @@ function renderAdmin(){
 function updateStatus(orderId, st){
  const o=orders.find(x=>x.orderId===orderId);
  if(o){o.status=st;ls.set('velora_orders',orders);toast('Status updated to '+st);}
+}
+
+/* --- Product management --- */
+function adminProducts(){
+ const fld=(id,l,ph,ex='',cls='')=>`<label class="block text-sm font-medium ${cls}">${l}<input id="${id}" class="inp mt-1 font-normal" placeholder="${ph}" ${ex}></label>`;
+ $('#atab').innerHTML=`
+ <div id="astats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"></div>
+ <section class="card p-5 mb-8">
+  <h2 class="text-lg font-bold">Add new product</h2>
+  <p class="mut text-sm mb-4">Fields marked * are required. New products appear in the store immediately.</p>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+   ${fld('np_n','Product name *','e.g. Noise-Cancelling Headphones','maxlength="80"','lg:col-span-2')}
+   <label class="block text-sm font-medium">Category *<select id="np_c" class="inp mt-1 font-normal">${CATS.map(c=>`<option>${c}</option>`).join('')}</select></label>
+   ${fld('np_p','Price (Rs.) *','e.g. 4500','type="number" min="1" step="1" inputmode="numeric"')}
+   ${fld('np_s','Stock quantity','Default 15','type="number" min="0" step="1" inputmode="numeric"')}
+   ${fld('np_r','Rating (0–5)','Default 4.0','type="number" min="0" max="5" step="0.1" inputmode="decimal"')}
+   ${fld('np_e','Emoji icon','📦','maxlength="4"')}
+   ${fld('np_t','Tags (comma separated)','audio, wireless, gift')}
+   ${fld('np_i','Image URL','https://…','type="url"')}
+   <label class="block text-sm font-medium sm:col-span-2 lg:col-span-3">Description<textarea id="np_d" rows="2" maxlength="300" class="inp mt-1 font-normal" placeholder="Short product description"></textarea></label>
+  </div>
+  <div class="flex flex-wrap gap-3 mt-5">
+   <button class="btn" onclick="addProduct()">+ Add product</button>
+   <button class="ghost btn" onclick="adminProducts()">Clear form</button>
+  </div>
+ </section>
+ <section class="card p-5">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+   <h2 class="text-lg font-bold">Manage products <span id="acount" class="mut text-sm font-normal"></span></h2>
+   <input class="inp sm:max-w-xs" placeholder="Search by name or category…" value="${esc(aq)}" oninput="aq=this.value;adminList()">
+  </div>
+  <div id="alist" class="overflow-x-auto"></div>
+ </section>`;
+ adminStats();adminList();
+}
+
+function adminStats(){
+ const el=$('#astats');if(!el)return;
+ const out=P.filter(p=>p.stock===0).length,low=P.filter(p=>p.stock>0&&p.stock<=5).length;
+ const s=(l,v,c='')=>`<div class="card p-4"><div class="mut text-sm">${l}</div><div class="text-2xl font-extrabold mt-1 ${c}">${v}</div></div>`;
+ el.innerHTML=s('Total products',P.length)+s('Categories in use',new Set(P.map(p=>p.c)).size)+s('Low stock (≤5)',low,low?'text-amber-600':'')+s('Out of stock',out,out?'text-red-600':'');
+}
+
+function adminList(){
+ const q=aq.toLowerCase().trim();
+ const r=[...P].sort((a,b)=>b.id-a.id).filter(p=>!q||(p.n+' '+p.c).toLowerCase().includes(q));
+ $('#acount').textContent='('+r.length+' of '+P.length+')';
+ $('#alist').innerHTML=r.length?`<table class="ptbl"><thead><tr><th>Product</th><th>Category</th><th style="width:130px">Price (Rs.)</th><th style="width:90px">Stock</th><th style="width:90px"></th></tr></thead><tbody>${r.map(p=>`
+ <tr><td><div class="flex items-center gap-3"><div class="w-10 shrink-0">${tile(p,'h-10')}</div><div><b>${esc(p.n)}</b><div class="text-xs mut">ID ${p.id}</div></div></div></td>
+ <td>${esc(p.c)}</td>
+ <td><input type="number" min="1" class="inp" value="${p.p}" onchange="updateProd(${p.id},'p',this)"></td>
+ <td><input type="number" min="0" class="inp" value="${p.stock}" onchange="updateProd(${p.id},'stock',this)"></td>
+ <td class="text-right"><button class="danger" onclick="removeProduct(${p.id})">Remove</button></td></tr>`).join('')}</tbody></table>`
+ :'<p class="mut text-center py-10">No products found.</p>';
+}
+
+function addProduct(){
+ const g=id=>$('#'+id).value.trim(), clean=s=>s.replace(/[<>"]/g,'');
+ const n=clean(g('np_n')), c=g('np_c'), p=+g('np_p'), s=g('np_s')===''?15:+g('np_s'), r=g('np_r')===''?4:+g('np_r');
+ const img=clean(g('np_i')), e=clean(g('np_e'))||'📦', bad=[];
+ if(n.length<2)bad.push('np_n');
+ if(!(p>0))bad.push('np_p');
+ if(!Number.isInteger(s)||s<0)bad.push('np_s');
+ if(!(r>=0&&r<=5))bad.push('np_r');
+ if(img&&!/^https?:\/\//i.test(img))bad.push('np_i');
+ document.querySelectorAll('#atab .inp.bad').forEach(x=>x.classList.remove('bad'));
+ if(bad.length){bad.forEach(id=>$('#'+id).classList.add('bad'));toast('Please correct the highlighted fields');return;}
+ if(P.some(x=>x.n.toLowerCase()===n.toLowerCase())){$('#np_n').classList.add('bad');toast('A product with this name already exists');return;}
+ P.push({
+  id:Math.max(0,...P.map(x=>x.id))+1, n, c, p:Math.round(p), r, e,
+  t:clean(g('np_t')).split(',').map(x=>x.trim().toLowerCase()).filter(Boolean),
+  sold:0, rv:0, stock:s, sizes:c==='Fashion'?['S','M','L','XL']:null,
+  d:clean(g('np_d'))||`${n} — crafted for everyday use with premium materials.`, img
+ });
+ saveProducts();aq='';adminProducts();toast('"'+n+'" added to the store');
+}
+
+function updateProd(id,field,el){
+ const p=byId(id),v=+el.value;
+ if(!p)return;
+ const ok=field==='p'?v>0:Number.isInteger(v)&&v>=0;
+ if(!ok){el.value=p[field];toast(field==='p'?'Price must be greater than 0':'Stock must be 0 or more');return;}
+ p[field]=Math.round(v);saveProducts();saveCart();adminStats();toast(p.n+' updated');
+}
+
+function removeProduct(id){
+ const p=byId(id);if(!p)return;
+ if(!confirm('Remove "'+p.n+'" from the store?\n\nIt will disappear from the shop and from any customer carts. Past orders are kept.'))return;
+ P=P.filter(x=>x.id!==id);
+ cart=cart.filter(i=>i.id!==id);
+ saveProducts();saveCart();adminStats();adminList();toast('"'+p.n+'" removed');
 }
 
 // Init
