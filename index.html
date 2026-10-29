@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="vc-pre">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -54,6 +54,123 @@ body{overflow-x:clip}
 .chud{position:absolute;left:5%;bottom:5%;font-family:ui-monospace,Menlo,monospace;font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;color:#a99cff}
 .cbar{position:absolute;left:0;bottom:0;height:2px;width:0;background:linear-gradient(90deg,#7c5cff,#ff4fd8,#4fc3ff)}
 #drawer{transition:transform .3s}
+
+
+/* Embedded from velora-cinema.css */
+/*! Velora Cinema v1.0 — cinematic layer. Load AFTER velora-motion.css. Purely additive. */
+
+:root { --vc-a: #7c6cff; --vc-b: #22d3ee; --vc-c: #ff4fd8; }
+
+/* Hide the page until the intro overlay exists (needs the 1-line <head> snippet).
+   Failsafe: shows the page after 4.5s even if the JS never loads. */
+html.vc-pre body { visibility: hidden; animation: vc-failsafe 0s 4.5s forwards; }
+@keyframes vc-failsafe { to { visibility: visible; } }
+html.vc-lock { overflow: hidden; }
+
+/* Your OLD opening animation (auto-detected full-screen loader) is switched off */
+.vc-legacy { display: none !important; }
+
+/* While the intro plays, hold the hero entrance so it fires as the curtain opens */
+html.vc-intro :is(.vm-rise, .vm-w > span, .vm-float) { animation-play-state: paused; }
+html.vc-intro .vm-reveal.vm-in { opacity: 0; translate: 0 32px; }
+
+/* ───────────── 1 · INTRO ───────────── */
+.vc-intro-layer {
+  position: fixed; inset: 0; z-index: 2147483600; display: grid; place-items: center;
+  background: #050509; color: #fff; overflow: hidden;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.vc-ic { position: absolute; inset: 0; width: 100%; height: 100%; }
+.vc-ring { position: absolute; width: min(46vmin, 420px); aspect-ratio: 1; rotate: -90deg;
+           filter: drop-shadow(0 0 14px rgb(124 108 255 / .85)); }
+.vc-ring circle { fill: none; stroke-width: 1.2; }
+.vc-ring-bg { stroke: rgb(255 255 255 / .08); }
+.vc-ring-fg { stroke: #fff; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1;
+              animation: vc-draw 1.7s cubic-bezier(.65, 0, .2, 1) .15s forwards; }
+@keyframes vc-draw { to { stroke-dashoffset: 0; } }
+
+.vc-word { position: relative; font-weight: 700; font-size: clamp(20px, 4.6vmin, 42px);
+           letter-spacing: .55em; margin-right: -.55em;
+           animation: vc-track 2.2s cubic-bezier(.16, 1, .3, 1) .3s forwards; }
+@keyframes vc-track { to { letter-spacing: .2em; margin-right: -.2em; } }
+.vc-word span { display: inline-block; opacity: 0; filter: blur(14px); transform: translateY(18px) scale(1.15);
+                animation: vc-letter 1s cubic-bezier(.16, 1, .3, 1) forwards;
+                animation-delay: calc(.55s + var(--i) * .09s); }
+@keyframes vc-letter { to { opacity: 1; filter: blur(0); transform: none; } }
+
+.vc-count { position: absolute; left: 50%; bottom: 9vh; translate: -50% 0; opacity: .55;
+            font: 500 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .3em; }
+.vc-skip { position: absolute; right: 20px; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+           padding: 7px 14px; border-radius: 999px; border: 1px solid rgb(255 255 255 / .25);
+           background: transparent; color: #fff; font-size: 12px; cursor: pointer; opacity: .7; }
+.vc-flare { position: fixed; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px;
+            z-index: 2147483601; pointer-events: none;
+            background: linear-gradient(90deg, transparent, #fff 30%, #fff 70%, transparent);
+            box-shadow: 0 0 40px 10px rgb(124 108 255 / .6); }
+
+/* ───────────── 2 · AMBIENT LAYERS ───────────── */
+.vc-field { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 40; pointer-events: none; }
+.vc-aurora {
+  position: fixed; inset: -20%; z-index: -1; pointer-events: none; opacity: .5;
+  background:
+    radial-gradient(40% 35% at 20% 30%, color-mix(in srgb, var(--vc-a) 35%, transparent), transparent 70%),
+    radial-gradient(35% 40% at 80% 25%, color-mix(in srgb, var(--vc-b) 28%, transparent), transparent 70%),
+    radial-gradient(45% 40% at 55% 85%, color-mix(in srgb, var(--vc-c) 24%, transparent), transparent 70%);
+  animation: vc-drift 26s ease-in-out infinite alternate;
+}
+@keyframes vc-drift { to { translate: 4% -3%; scale: 1.12; rotate: 6deg; } }
+
+.vc-grain {
+  position: fixed; inset: -50%; z-index: 2147483300; pointer-events: none; opacity: .06;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  animation: vc-grain 1s steps(6) infinite;
+}
+@keyframes vc-grain {
+  0%, 100% { translate: 0 0; } 20% { translate: -4% 3%; } 40% { translate: 3% -5%; }
+  60% { translate: -6% -2%; } 80% { translate: 5% 4%; }
+}
+.vc-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 2147483200;
+               pointer-events: none; transform-origin: 0 50%; transform: scaleX(0);
+               background: linear-gradient(90deg, var(--vc-a), var(--vc-b), var(--vc-c)); }
+
+/* ───────────── 3 · CURSOR ───────────── */
+.vc-cursor, .vc-dot { position: fixed; left: 0; top: 0; z-index: 2147483400; pointer-events: none;
+                      mix-blend-mode: difference; opacity: 0; transition: opacity .3s; }
+.vc-cursor { width: 38px; height: 38px; margin: -19px 0 0 -19px; border: 1.5px solid #fff; border-radius: 50%; }
+.vc-dot { width: 6px; height: 6px; margin: -3px 0 0 -3px; background: #fff; border-radius: 50%; }
+
+/* ───────────── 4 · ROUTE CURTAIN ───────────── */
+.vc-curtain {
+  position: fixed; inset: 0; z-index: 2147483500; pointer-events: none; visibility: hidden;
+  transform: translate3d(0, 100%, 0);
+  background: radial-gradient(60% 50% at 50% 100%, color-mix(in srgb, var(--vc-a) 45%, #07070b), #06060a 70%);
+}
+.vc-curtain::before, .vc-curtain::after {
+  content: ""; position: absolute; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, #fff, transparent);
+  box-shadow: 0 0 30px 6px color-mix(in srgb, var(--vc-b) 60%, transparent);
+}
+.vc-curtain::after { top: 0; }
+.vc-curtain::before { bottom: 0; }
+
+/* ───────────── 5 · GLITCH ───────────── */
+.vc-glitch { animation: vc-glitch .55s steps(1, end) 1; }
+@keyframes vc-glitch {
+  0%   { text-shadow: 2px 0 var(--vc-b), -2px 0 var(--vc-c); translate: -2px 0; }
+  20%  { text-shadow: -3px 0 var(--vc-b), 3px 0 var(--vc-c); translate: 3px 0; clip-path: inset(10% 0 55% 0); }
+  40%  { text-shadow: 3px 1px var(--vc-b), -3px -1px var(--vc-c); translate: -3px 0; clip-path: inset(55% 0 10% 0); }
+  60%  { text-shadow: -2px 0 var(--vc-b), 2px 0 var(--vc-c); translate: 2px 0; clip-path: none; }
+  80%  { text-shadow: 1px 0 var(--vc-b), -1px 0 var(--vc-c); translate: 0 0; }
+  100% { text-shadow: none; translate: 0 0; }
+}
+
+/* Admin route stays clean and fast */
+.vc-admin :is(.vc-field, .vc-aurora, .vc-grain, .vc-progress, .vc-cursor, .vc-dot) { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vc-aurora, .vc-grain, .vc-glitch { animation: none !important; }
+}
+
 </style>
 </head>
 <body>
@@ -677,6 +794,343 @@ function cineFrame(t){
 fromHash();
 saveCart();
 requestAnimationFrame(cineFrame);
+</script>
+
+<!-- Embedded from Unconfirmed 166803.crdownload (Velora Cinema JavaScript) -->
+<script>
+/*! Velora Cinema v1.0 — cinematic layer (particle intro, 3D depth, warp field, glitch/decode,
+ *  route curtain, cursor). Additive: it never edits your markup structure. Load AFTER velora-motion.js. */
+(() => {
+  'use strict';
+  if (window.VeloraCinema) return;
+
+  const CFG = {
+    brand: 'VELORA',                 // wordmark shown in the intro
+    legacyIntro: '',                 // selector of YOUR old loader; blank = auto-detect a full-screen fixed layer
+    intro: true,                     // cinematic opening (replaces your old one)
+    field: true, aurora: true, grain: true, progress: true,
+    tilt: true, cursor: true, curtain: true, decode: true, countUp: true, glitch: true,
+    cards: '.vm-card, .product-card, .card, [data-product], [data-tilt]',
+  };
+
+  const d = document, root = d.documentElement, raf = requestAnimationFrame;
+  const $ = (s, c = d) => c.querySelector(s), $$ = (s, c = d) => Array.from(c.querySelectorAll(s));
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v)), lerp = (a, b, t) => a + (b - a) * t;
+  const easeOut = t => 1 - Math.pow(1 - t, 3);
+  const easeInOut = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const isAdmin = () => /^#admin/i.test(location.hash);
+  const mk = (tag, cls, html) => { const e = d.createElement(tag); e.className = cls; if (html) e.innerHTML = html; return e; };
+  const COLORS = ['124,108,255', '34,211,238', '255,79,216'];
+  const ptr = { x: 0, y: 0 };                                           // smoothed pointer, -1..1
+  let ptrT = { x: 0, y: 0 };
+  root.classList.add('vc-js');
+
+  /* ───────── your old loader: detect and switch off ───────── */
+  function hideLegacy() {
+    if (CFG.legacyIntro) { $$(CFG.legacyIntro).forEach(e => e.classList.add('vc-legacy')); return; }
+    const W = innerWidth, H = innerHeight;
+    $$('body > *, body > * > *').forEach(e => {
+      const cs = getComputedStyle(e);
+      if (cs.position !== 'fixed' || cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity < .05) return;
+      const r = e.getBoundingClientRect();
+      if (r.width < W * .9 || r.height < H * .9) return;
+      if (e.querySelector('header, nav, main, form, input, button, a[href^="#"]')) return;   // an app shell, not a loader
+      if (cs.backgroundImage !== 'none' || !/,\s*0\)$|transparent/.test(cs.backgroundColor)) e.classList.add('vc-legacy');
+    });
+  }
+
+  /* ───────── 1 · CINEMATIC INTRO ───────── */
+  let waitIntro = null;
+  function intro() {
+    return new Promise(resolve => {
+      const ov = mk('div', 'vc-intro-layer');
+      const word = [...CFG.brand].map((c, i) => `<span style="--i:${i}">${c}</span>`).join('');
+      ov.innerHTML = `<canvas class="vc-ic"></canvas>
+        <svg class="vc-ring" viewBox="0 0 200 200" aria-hidden="true"><circle class="vc-ring-bg" cx="100" cy="100" r="86"/><circle class="vc-ring-fg" cx="100" cy="100" r="86" pathLength="1"/></svg>
+        <div class="vc-word" role="img" aria-label="${CFG.brand}">${word}</div>
+        <div class="vc-count" aria-hidden="true">000</div>
+        <button class="vc-skip" type="button">Skip</button>`;
+      root.appendChild(ov);
+      root.classList.add('vc-intro', 'vc-lock'); root.classList.remove('vc-pre');
+
+      const cv = $('.vc-ic', ov), g = cv.getContext('2d'), cnt = $('.vc-count', ov);
+      const dpr = Math.min(devicePixelRatio || 1, 2), W = innerWidth, H = innerHeight, cx = W / 2, cy = H / 2;
+      cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const Rr = Math.min(.46 * Math.min(W, H), 420) * .43, N = W < 700 ? 320 : 560;
+      const P = Array.from({ length: N }, (_, i) => ({
+        far: Math.max(W, H) * (.6 + Math.random() * .7), ta: (i / N) * 6.283 + Math.random() * .05,
+        tr: Rr * (.97 + Math.random() * .06), sw: (Math.random() - .5) * 3.2, sz: .6 + Math.random() * 1.7,
+        c: COLORS[i % 3], dl: Math.random() * .25, sp: 500 + Math.random() * 1100, ang: 0, r: 0,
+      }));
+
+      const T_OPEN = 2150, T_END = 3050;
+      let done = false, opened = false, exploded = false, t0 = 0, last = 0;
+      const finish = quick => {
+        if (done) return; done = true;
+        const end = () => { ov.remove(); $('.vc-flare')?.remove(); root.classList.remove('vc-intro', 'vc-lock'); waitIntro = null; window.__vcWait = null; resolve(); };
+        root.classList.remove('vc-intro');
+        quick ? ov.animate({ opacity: [1, 0] }, { duration: 250 }).onfinish = end : end();
+      };
+      $('.vc-skip', ov).addEventListener('click', () => finish(true));
+      addEventListener('keydown', function k(e) { if (e.key === 'Escape' || e.key === ' ') { removeEventListener('keydown', k); finish(true); } });
+
+      (function frame(now) {
+        if (done) return;
+        if (!t0) t0 = now; const t = Math.max(0, now - t0), dt = Math.min(.05, (now - last) / 1000 || .016); last = now;
+        g.globalCompositeOperation = 'source-over'; g.fillStyle = 'rgba(5,5,9,.25)'; g.fillRect(0, 0, W, H);
+        g.globalCompositeOperation = 'lighter';
+        for (let i = 0; i < N; i++) {
+          const p = P[i]; let a = 1;
+          if (t < 2050) {
+            const u = clamp(t / 1700 - p.dl, 0, 1), e = easeOut(u);
+            p.ang = p.ta + p.sw * (1 - e); p.r = lerp(p.far, p.tr, e) + (t > 1700 ? Math.sin(t * .02 + i) * 1.5 : 0);
+            a = .25 + .75 * e;
+          } else {
+            if (!exploded) p.ang += 0;
+            p.r += p.sp * dt * (1 + (t - 2050) / 500); a = clamp(1 - (t - 2050) / 800, 0, 1);
+          }
+          if (a <= 0) continue;
+          g.fillStyle = `rgba(${p.c},${a})`; g.beginPath();
+          g.arc(cx + Math.cos(p.ang) * p.r, cy + Math.sin(p.ang) * p.r, p.sz, 0, 6.283); g.fill();
+        }
+        if (t >= 2050) exploded = true;
+        const fl = clamp(1 - Math.abs(t - 1980) / 170, 0, 1);
+        if (fl > 0) {
+          const gr = g.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W, H) * .5 * fl + 30);
+          gr.addColorStop(0, `rgba(255,255,255,${.9 * fl})`); gr.addColorStop(1, 'rgba(124,108,255,0)');
+          g.fillStyle = gr; g.fillRect(0, 0, W, H);
+        }
+        cnt.textContent = String(Math.round(easeInOut(clamp(t / 1900, 0, 1)) * 100)).padStart(3, '0');
+
+        if (t >= T_OPEN && !opened) {                       // the screen splits open from the centre line
+          opened = true; root.classList.remove('vc-intro');
+          const fx = mk('div', 'vc-flare'); root.appendChild(fx);
+          fx.animate([{ opacity: 1, transform: 'scaleY(1)' }, { opacity: 0, transform: 'scaleY(40)' }], { duration: 900, easing: 'cubic-bezier(.2,.7,.2,1)' });
+          ov.animate([
+            { clipPath: 'polygon(0% 0%,100% 0%,100% 50%,0% 50%,0% 50%,100% 50%,100% 100%,0% 100%)' },
+            { clipPath: 'polygon(0% 0%,100% 0%,100% 0%,0% 0%,0% 100%,100% 100%,100% 100%,0% 100%)' },
+          ], { duration: 900, easing: 'cubic-bezier(.7,0,.2,1)', fill: 'forwards' });
+          $('.vc-word', ov).animate({ opacity: [1, 0] }, { duration: 350, fill: 'forwards' });
+        }
+        if (t >= T_END) return finish(false);
+        raf(frame);
+      })(performance.now());
+      setTimeout(() => finish(true), 7000);                // failsafe
+    });
+  }
+
+  /* ───────── 2 · PARTICLE FIELD with scroll "warp" ───────── */
+  function pageDark() {
+    const x = mk('canvas', ''); x.width = x.height = 1;
+    const c = x.getContext('2d', { willReadFrequently: true });
+    for (const el of [d.body, root]) {
+      c.fillStyle = '#fff'; c.clearRect(0, 0, 1, 1); c.fillStyle = getComputedStyle(el).backgroundColor; c.fillRect(0, 0, 1, 1);
+      const [r, gg, b, a] = c.getImageData(0, 0, 1, 1).data;
+      if (a > 20) return (.2126 * r + .7152 * gg + .0722 * b) / 255 < .45;
+    }
+    return false;
+  }
+  function field() {
+    const cv = mk('canvas', 'vc-field'); cv.setAttribute('aria-hidden', 'true'); root.appendChild(cv);
+    const g = cv.getContext('2d'); let W, H, dpr, q = 1, P = [], dark = pageDark(), vel = 0, lastY = scrollY, tprev = 0, slow = 0;
+    const fit = () => {
+      dpr = Math.min(devicePixelRatio || 1, 1.75); W = innerWidth; H = innerHeight;
+      cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const n = Math.round(clamp(W * H / 11000, 40, 150) * q);
+      while (P.length < n) P.push({ x: Math.random(), y: Math.random(), z: .15 + Math.random() * .85, c: COLORS[(Math.random() * 3) | 0], s: Math.random() * 6.283 });
+      P.length = n;
+    };
+    fit(); addEventListener('resize', fit); setInterval(() => { dark = pageDark(); }, 3000);
+    (function frame(t) {
+      raf(frame);
+      if (d.hidden || isAdmin()) { tprev = t; return; }
+      const dt = Math.min(.05, (t - tprev) / 1000 || .016); tprev = t;
+      if (dt > .028) { if (++slow > 90 && q > .5) { q = .5; fit(); } } else slow = Math.max(0, slow - 1);
+      const y = scrollY, dy = y - lastY; lastY = y;
+      vel = lerp(vel, dy / (dt * 60 || 1), .12);
+      ptr.x = lerp(ptr.x, ptrT.x, .06); ptr.y = lerp(ptr.y, ptrT.y, .06);
+      g.clearRect(0, 0, W, H); g.globalCompositeOperation = dark ? 'lighter' : 'source-over';
+      for (const p of P) {
+        p.y += (-.01 - .02 * p.z) * dt - (dy / H) * p.z * .9;
+        if (p.y < -.05) p.y += 1.1; else if (p.y > 1.05) p.y -= 1.1;
+        const sx = (p.x + ptr.x * .02 * p.z) * W, sy = p.y * H, r = .6 + p.z * 1.8;
+        const a = (.25 + .55 * p.z) * (.6 + .4 * Math.sin(t * .001 + p.s)) * (dark ? 1 : .7);
+        const L = clamp(Math.abs(vel) * p.z * .5, 0, 70);
+        g.strokeStyle = g.fillStyle = `rgba(${p.c},${a.toFixed(3)})`;
+        g.beginPath();
+        if (L > 3) { g.lineWidth = r; g.moveTo(sx, sy); g.lineTo(sx, sy + (vel > 0 ? L : -L)); g.stroke(); }
+        else { g.arc(sx, sy, r, 0, 6.283); g.fill(); }
+      }
+    })(performance.now());
+  }
+
+  /* ───────── 3 · 3D DEPTH: scroll lean + pointer tilt (individual `rotate` property) ───────── */
+  function tilt() {
+    const state = new WeakMap(), vis = new Set(), seen = new WeakSet();
+    let hover = null, mx = 0, my = 0, run = false;
+    const wake = () => { if (!run) { run = true; raf(tick); } };
+    const io = new IntersectionObserver(es => { es.forEach(e => e.isIntersecting ? vis.add(e.target) : vis.delete(e.target)); wake(); }, { rootMargin: '120px' });
+    const reg = el => {
+      if (seen.has(el)) return; seen.add(el); io.observe(el);
+      const p = el.parentElement; if (p && getComputedStyle(p).perspective === 'none') p.style.perspective = '1400px';
+    };
+    const scan = () => {
+      $$(CFG.cards).forEach(el => { if (!el.closest('header, footer, .vm-drawer')) reg(el); });
+      $$('.vm-float').forEach(reg);
+    };
+    function tick() {
+      run = false; if (isAdmin()) return;
+      const H = innerHeight; let moving = false;
+      const rects = []; vis.forEach(el => rects.push([el, el.getBoundingClientRect()]));
+      for (const [el, r] of rects) {
+        let s = state.get(el); if (!s) { s = { vx: 0, vy: 0 }; state.set(el, s); }
+        let tvx = 0, tvy = 0;
+        if (el.classList.contains('vm-float')) { tvx = -ptr.y * 5; tvy = ptr.x * 7; }
+        else {
+          tvx = clamp(((r.top + r.height / 2) / H - .5) * 2, -1, 1) * 9;
+          if (el === hover) {
+            const nx = clamp((mx - (r.left + r.width / 2)) / (r.width / 2), -1, 1), ny = clamp((my - (r.top + r.height / 2)) / (r.height / 2), -1, 1);
+            tvx += -ny * 8; tvy = nx * 9;
+          }
+        }
+        s.vx = lerp(s.vx, tvx, .12); s.vy = lerp(s.vy, tvy, .12);
+        if (Math.abs(s.vx - tvx) > .02 || Math.abs(s.vy - tvy) > .02) moving = true;
+        const m = Math.hypot(s.vx, s.vy);
+        el.style.rotate = m < .03 ? '' : `${(s.vx / m).toFixed(3)} ${(s.vy / m).toFixed(3)} 0 ${m.toFixed(2)}deg`;
+      }
+      if (moving || (rects.some(([el]) => el.classList.contains('vm-float')) && (Math.abs(ptr.x - ptrT.x) > .01 || Math.abs(ptr.y - ptrT.y) > .01))) wake();
+    }
+    addEventListener('pointermove', e => {
+      if (e.pointerType === 'touch') return;
+      mx = e.clientX; my = e.clientY; hover = e.target.closest && e.target.closest(CFG.cards); wake();
+    }, { passive: true });
+    d.addEventListener('pointerleave', () => { hover = null; wake(); });
+    addEventListener('scroll', wake, { passive: true });
+    return scan;
+  }
+
+  /* ───────── 4 · CURSOR ───────── */
+  function cursor() {
+    const ring = mk('div', 'vc-cursor'), dot = mk('div', 'vc-dot'); root.append(ring, dot);
+    let x = -100, y = -100, rx = -100, ry = -100, s = 1, ts = 1, on = false;
+    addEventListener('pointermove', e => {
+      if (e.pointerType === 'touch') return;
+      x = e.clientX; y = e.clientY;
+      if (!on) { on = true; rx = x; ry = y; ring.style.opacity = dot.style.opacity = 1; }
+      ts = e.target.closest && e.target.closest('a, button, [role="button"], input, select, textarea, .vm-card, [data-tilt]') ? 1.8 : 1;
+    }, { passive: true });
+    root.addEventListener('pointerleave', () => { on = false; ring.style.opacity = dot.style.opacity = 0; });
+    (function f() {
+      raf(f); if (!on) return;
+      rx = lerp(rx, x, .18); ry = lerp(ry, y, .18); s = lerp(s, ts, .15);
+      ring.style.transform = `translate3d(${rx}px,${ry}px,0) scale(${s.toFixed(3)})`;
+      dot.style.transform = `translate3d(${x}px,${y}px,0)`;
+    })();
+  }
+
+  /* ───────── 5 · ROUTE CURTAIN (replays your own click after the cover) ───────── */
+  function glitch(el) {
+    if (!el || reduce) return;
+    el.classList.remove('vc-glitch'); void el.offsetWidth; el.classList.add('vc-glitch');
+    el.addEventListener('animationend', () => el.classList.remove('vc-glitch'), { once: true });
+  }
+  function curtain() {
+    const el = mk('div', 'vc-curtain'); el.setAttribute('aria-hidden', 'true'); root.appendChild(el);
+    let busy = false, bypass = false;
+    const ok = a => { const h = a.getAttribute('href') || ''; return /^#[a-z][\w-]*$/i.test(h) && !/^#admin/i.test(h) && h !== location.hash && !a.closest('.vm-drawer'); };
+    const ease = 'cubic-bezier(.7,0,.2,1)';
+    d.addEventListener('click', e => {
+      if (bypass || busy || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const a = e.target.closest && e.target.closest('a[href^="#"]'); if (!a || !ok(a)) return;
+      e.preventDefault(); e.stopImmediatePropagation(); busy = true; el.style.visibility = 'visible';
+      el.animate([{ transform: 'translate3d(0,100%,0)' }, { transform: 'translate3d(0,0,0)' }], { duration: 380, easing: ease, fill: 'forwards' }).onfinish = () => {
+        bypass = true; a.click(); bypass = false;
+        setTimeout(() => {
+          el.animate([{ transform: 'translate3d(0,0,0)' }, { transform: 'translate3d(0,-100%,0)' }], { duration: 620, easing: ease, fill: 'forwards' }).onfinish = () => {
+            el.getAnimations().forEach(x => x.cancel()); el.style.visibility = 'hidden'; busy = false;
+          };
+        }, 140);
+      };
+    }, true);
+  }
+
+  /* ───────── 6 · DECODE headings · COUNT-UP prices ───────── */
+  const GL = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789#%&*+';
+  function decode(el) {
+    const tn = el.childNodes.length === 1 && el.firstChild.nodeType === 3 ? el.firstChild : null; if (!tn) return;
+    const fin = tn.nodeValue; if (fin.trim().length < 3 || fin.length > 70) return;
+    el.style.minHeight = el.offsetHeight + 'px'; el.setAttribute('aria-label', fin.trim());
+    const t0 = performance.now(), dur = 650 + fin.length * 14;
+    (function f(now) {
+      const u = clamp((now - t0) / dur, 0, 1), k = Math.floor(u * fin.length);
+      tn.nodeValue = u < 1 ? fin.replace(/\S/g, (c, i) => i < k ? c : GL[(Math.random() * GL.length) | 0]) : fin;
+      if (u < 1) raf(f); else { el.style.minHeight = ''; el.removeAttribute('aria-label'); }
+    })(t0);
+  }
+  const PRICE = /^(\s*(?:Rs\.?|PKR|₨|\$|€|£)?\s*)(\d[\d,]*(?:\.\d+)?)(\s*)$/i;
+  function countUp(card) {
+    $$('*', card).filter(e => !e.children.length && PRICE.test(e.textContent)).forEach(e => {
+      const tn = e.firstChild; if (!tn || tn.nodeType !== 3) return;
+      const m = e.textContent.match(PRICE), target = parseFloat(m[2].replace(/,/g, '')); if (!(target > 0)) return;
+      const dec = (m[2].split('.')[1] || '').length, comma = m[2].includes(','), t0 = performance.now();
+      (function f(now) {
+        const u = easeOut(clamp((now - t0) / 900, 0, 1)), v = target * u;
+        tn.nodeValue = m[1] + (comma ? v.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }) : v.toFixed(dec)) + m[3];
+        if (u < 1) raf(f);
+      })(t0);
+    });
+  }
+  const kinds = new WeakMap();
+  const kio = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return; kio.unobserve(e.target);
+    const k = kinds.get(e.target), go = () => (k === 'h' ? setTimeout(() => decode(e.target), 180) : countUp(e.target));
+    waitIntro ? waitIntro.then(go) : go();
+  }), { threshold: .35 });
+  function regTargets() {
+    const skip = '.vm-drawer, .vc-intro-layer, header, footer';
+    if (CFG.decode) $$('h2').forEach(h => { if (!kinds.has(h) && !h.closest(skip + ', .vm-card')) { kinds.set(h, 'h'); kio.observe(h); } });
+    if (CFG.countUp) $$(CFG.cards).forEach(c => { if (!kinds.has(c) && !c.closest(skip)) { kinds.set(c, 'c'); kio.observe(c); } });
+  }
+
+  /* ───────── boot ───────── */
+  function boot() {
+    hideLegacy(); setTimeout(hideLegacy, 150); setTimeout(hideLegacy, 700);
+    const adm = () => root.classList.toggle('vc-admin', isAdmin()); adm(); addEventListener('hashchange', adm);
+    if (reduce) { root.classList.remove('vc-pre'); return; }
+
+    if (CFG.intro && !isAdmin()) { waitIntro = intro(); window.__vcWait = waitIntro; } else root.classList.remove('vc-pre');
+
+    if (CFG.aurora) root.appendChild(mk('div', 'vc-aurora'));
+    if (CFG.grain) root.appendChild(mk('div', 'vc-grain'));
+    if (CFG.field) field();
+    if (CFG.cursor && fine) cursor();
+    if (CFG.curtain) curtain();
+    const scanTilt = CFG.tilt ? tilt() : () => {};
+
+    if (CFG.progress) {
+      const bar = mk('div', 'vc-progress'); root.appendChild(bar); let pt = 0;
+      const upd = () => { pt = 0; const h = root.scrollHeight - innerHeight; bar.style.transform = `scaleX(${h > 0 ? clamp(scrollY / h, 0, 1) : 0})`; };
+      addEventListener('scroll', () => { if (!pt) { pt = 1; raf(upd); } }, { passive: true }); upd();
+    }
+    if (CFG.glitch && fine) {
+      d.addEventListener('pointerover', e => {
+        const t = e.target.closest && e.target.closest('header a, nav a, h1');
+        if (t && !t.contains(e.relatedTarget)) glitch(t);
+      });
+      addEventListener('hashchange', () => setTimeout(() => glitch($$('h1').find(h => h.getBoundingClientRect().height > 0)), 450));
+    }
+
+    let q = 0; const rescan = () => { q = 0; scanTilt(); regTargets(); };
+    new MutationObserver(() => { if (!q) { q = 1; raf(rescan); } }).observe(d.body, { childList: true, subtree: true });
+    rescan();
+  }
+
+  window.VeloraCinema = { replay: () => { waitIntro = intro(); window.__vcWait = waitIntro; return waitIntro; }, glitch };
+  d.readyState === 'loading' ? d.addEventListener('DOMContentLoaded', boot, { once: true }) : boot();
+})();
+
 </script>
 </body>
 </html>
